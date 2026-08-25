@@ -27,7 +27,7 @@
   <link rel="canonical" id="canonicalUrl" href="">
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="supabase-config.js"></script>
+  <script src="/supabase-config.js"></script>
 
   <style>
     :root{
@@ -332,11 +332,11 @@
 
   <header>
     <div class="nav">
-      <a href="index.html">
-        <img src="logo.png" class="logo" alt="Ajira & Connection Hub TZ">
+      <a href="/index.html">
+        <img src="/logo.png" class="logo" alt="Ajira & Connection Hub TZ">
       </a>
 
-      <a href="index.html" class="back">← Back to Jobs</a>
+      <a href="/index.html" class="back">← Back to Jobs</a>
     </div>
   </header>
 
@@ -388,6 +388,8 @@
           requirements,
           deadline,
           apply_link,
+          employer_email,
+          employer_whatsapp,
           company_logo_url,
           featured_image_url,
           status,
@@ -414,7 +416,9 @@
         type:data.job_type || "Full Time",
         companyLogo:data.company_logo_url || data.companies?.logo_url || "",
         featuredImage:data.featured_image_url || "",
-        applyLink:data.apply_link || ""
+        applyLink:data.apply_link || "",
+        employerEmail:data.employer_email || "",
+        employerWhatsapp:data.employer_whatsapp || ""
       };
     }
 
@@ -477,7 +481,7 @@
             <div class="error-box">
               <h2>Job haijapatikana</h2>
               <p>Link hii inaweza kuwa imefungwa, kufutwa au haipo.</p>
-              <a href="index.html">← Rudi kwenye Jobs</a>
+              <a href="/index.html">← Rudi kwenye Jobs</a>
             </div>
           `;
           return;
@@ -540,15 +544,28 @@
             <h2>How to Apply</h2>
 
             <p>
-              Soma taarifa za nafasi hii vizuri kisha bonyeza
-              <strong>Apply Now</strong> kwenda kwenye ukurasa rasmi
-              wa maombi.
+              Soma taarifa za nafasi hii vizuri kisha tumia njia ya maombi
+              iliyowekwa na mwajiri: <strong>Apply Now</strong>, WhatsApp au Email.
             </p>
 
-            <div class="buttons">
-              <button class="apply" onclick="applyNow()">
-                🚀 Apply Now
-              </button>
+            <div class="buttons" id="applyButtons">
+              ${job.applyLink ? `
+                <button class="apply" onclick="applyNow()">
+                  🚀 Apply Now
+                </button>
+              ` : ""}
+
+              ${job.employerWhatsapp ? `
+                <button class="share" onclick="applyWhatsApp()">
+                  📱 Apply via WhatsApp
+                </button>
+              ` : ""}
+
+              ${job.employerEmail ? `
+                <button class="copy" onclick="applyEmail()">
+                  📧 Apply via Email
+                </button>
+              ` : ""}
 
               <button class="share" onclick="shareWhatsApp()">
                 📲 Share WhatsApp
@@ -603,7 +620,7 @@
               Hakikisha <strong>supabase-config.js</strong> ipo
               kwenye folder moja na job.html.
             </p>
-            <a href="index.html">← Rudi kwenye Home</a>
+            <a href="/index.html">← Rudi kwenye Home</a>
           </div>
         `;
       }
@@ -643,18 +660,88 @@
         const job=await getJob();
 
         if(job && job.applyLink){
+          let url = job.applyLink.trim();
+
+          // Make sure normal web links open safely even if admin pasted
+          // a URL without the protocol.
+          if(!/^https?:\\/\\//i.test(url)){
+            url = "https://" + url;
+          }
+
           window.open(
-            job.applyLink,
+            url,
             "_blank",
             "noopener,noreferrer"
           );
         }else{
           showMessage(
-            "Application link bado haijawekwa na Admin."
+            "Application link haijawekwa. Tumia WhatsApp au Email kama zipo."
           );
         }
       }catch(error){
+        console.error(error);
         showMessage("Imeshindikana kufungua application link.");
+      }
+    }
+
+    async function applyWhatsApp(){
+      try{
+        const job=await getJob();
+
+        if(!job || !job.employerWhatsapp){
+          showMessage("WhatsApp ya mwajiri haijawekwa na Admin.");
+          return;
+        }
+
+        let number = String(job.employerWhatsapp).replace(/[^0-9+]/g,"");
+
+        // Tanzania convenience: 07XXXXXXXX / 06XXXXXXXX -> 2557XXXXXXXX / 2556XXXXXXXX
+        if(/^0[67][0-9]{8}$/.test(number)){
+          number = "255" + number.substring(1);
+        }
+
+        number = number.replace(/\+/g,"");
+
+        const message =
+          "Habari, nimeona tangazo la kazi ya " +
+          job.title +
+          " kupitia Ajira & Connection Hub TZ. Ningependa kuomba nafasi hii.";
+
+        window.open(
+          "https://wa.me/" + number + "?text=" + encodeURIComponent(message),
+          "_blank",
+          "noopener,noreferrer"
+        );
+      }catch(error){
+        console.error(error);
+        showMessage("Imeshindikana kufungua WhatsApp ya mwajiri.");
+      }
+    }
+
+    async function applyEmail(){
+      try{
+        const job=await getJob();
+
+        if(!job || !job.employerEmail){
+          showMessage("Email ya mwajiri haijawekwa na Admin.");
+          return;
+        }
+
+        const subject = "Application - " + job.title;
+        const body =
+          "Habari,\\n\\n" +
+          "Nimeona tangazo la " + job.title +
+          " kupitia Ajira & Connection Hub TZ. Ningependa kuomba nafasi hii.\\n\\n" +
+          "Asante.";
+
+        window.location.href =
+          "mailto:" + encodeURIComponent(job.employerEmail) +
+          "?subject=" + encodeURIComponent(subject) +
+          "&body=" + encodeURIComponent(body);
+
+      }catch(error){
+        console.error(error);
+        showMessage("Imeshindikana kufungua email ya mwajiri.");
       }
     }
 
