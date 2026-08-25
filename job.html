@@ -732,6 +732,8 @@
         box.innerHTML=`
           <div class="error-box">
             <h2>⚠️ Imeshindikana kupakia Job</h2>
+            <p>${escapeHtml(error?.message || "Unknown error")}</p>
+            <p style="font-size:13px;color:#667085;">Slug: ${escapeHtml(getSlug() || "(hakuna slug)")}</p>
             <p>
               Imeshindikana kuwasiliana na database ya Ajira Hub.
               Jaribu refresh. Kama tatizo linaendelea, angalia Supabase/RLS
