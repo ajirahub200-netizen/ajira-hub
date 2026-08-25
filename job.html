@@ -27,7 +27,14 @@
   <link rel="canonical" id="canonicalUrl" href="">
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="/supabase-config.js"></script>
+  <script>
+    // Public read-only Supabase connection for the job page.
+    // Keeping this here makes the public page independent of a relative config path.
+    window.supabaseClient = window.supabase.createClient(
+      "https://jvgvmnzekjkaakgqkoct.supabase.co",
+      "sb_publishable_5h9e4kX950OSHjhKvcGTDg_X8AILbMk"
+    );
+  </script>
 
   <style>
     :root{
@@ -366,7 +373,17 @@
     }
 
     function getSlug(){
-      return new URLSearchParams(window.location.search).get("slug");
+      const querySlug = new URLSearchParams(window.location.search).get("slug");
+      if(querySlug) return querySlug;
+
+      // Also support clean links such as /job/ict-officer-vodacom-tanzania-plc
+      const parts = window.location.pathname.split("/").filter(Boolean);
+      const jobIndex = parts.indexOf("job");
+      if(jobIndex >= 0 && parts[jobIndex + 1]){
+        return decodeURIComponent(parts[jobIndex + 1]);
+      }
+
+      return null;
     }
 
     async function getJob(){
@@ -376,7 +393,7 @@
         return null;
       }
 
-      const {data,error}=await supabaseClient
+      const query = supabaseClient
         .from("jobs")
         .select(`
           id,
@@ -399,6 +416,13 @@
         .eq("slug",slug)
         .eq("status","published")
         .maybeSingle();
+
+      // Avoid an endless loading screen if the network/database does not respond.
+      const timeout = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("Supabase request timed out.")), 12000)
+      );
+
+      const {data,error}=await Promise.race([query, timeout]);
 
       if(error){
         console.error("Supabase job error:",error);
@@ -617,8 +641,9 @@
           <div class="error-box">
             <h2>⚠️ Imeshindikana kupakia Job</h2>
             <p>
-              Hakikisha <strong>supabase-config.js</strong> ipo
-              kwenye folder moja na job.html.
+              Imeshindikana kuwasiliana na database ya Ajira Hub.
+              Jaribu refresh. Kama tatizo linaendelea, angalia Supabase/RLS
+              ya table <strong>jobs</strong>.
             </p>
             <a href="/index.html">← Rudi kwenye Home</a>
           </div>
