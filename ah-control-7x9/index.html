@@ -84,14 +84,14 @@
   </style>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="../supabase-config.js"></script>
+  <script src="/supabase-config.js"></script>
 </head>
 
 <body>
 
 <div id="loginOverlay" class="login-overlay">
   <form class="login-card" id="loginForm">
-    <img src="../logo.png" alt="Ajira & Connection Hub TZ">
+    <img src="/logo.png" alt="Ajira & Connection Hub TZ">
     <h2>Admin Login</h2>
     <p>Ingia kusimamia Ajira & Connection Hub TZ</p>
 
@@ -110,7 +110,7 @@
 <div class="layout">
   <aside>
     <div class="brand">
-      <img src="logo.png" alt="Logo">
+      <img src="/logo.png" alt="Logo">
       <strong>AJIRA HUB<br>ADMIN</strong>
     </div>
 
@@ -132,7 +132,7 @@
         </div>
 
         <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <a class="view-site" href="index.html">🌐 View Website</a>
+          <a class="view-site" href="/">🌐 View Website</a>
           <button class="view-site" type="button" onclick="adminLogout()" style="cursor:pointer">🚪 Logout</button>
         </div>
       </div>
@@ -171,6 +171,16 @@
           </div>
 
           <div>
+            <label>Employer Email</label>
+            <input id="employerEmail" type="email" placeholder="Mfano: hr@company.co.tz">
+          </div>
+
+          <div>
+            <label>Employer WhatsApp</label>
+            <input id="employerWhatsapp" type="tel" placeholder="Mfano: 0763593066">
+          </div>
+
+          <div>
             <label>Company Logo</label>
             <input id="companyLogo" type="file" accept="image/png,image/jpeg,image/webp">
             <div id="logoPreview" class="image-preview">
@@ -196,21 +206,12 @@
           </div>
 
           <div>
-            <label>Category</label>
-            <select id="category">
-              <option>Accounting / Finance</option>
-              <option>ICT / Technology</option>
-              <option>Education</option>
-              <option>Health & Medical</option>
-              <option>Banking</option>
-              <option>Human Resources</option>
-              <option>Marketing & Sales</option>
-              <option>Engineering</option>
-              <option>NGO / Development</option>
-              <option>Government</option>
-              <option>Internship</option>
-              <option>Graduate Jobs</option>
-            </select>
+            <label>Category *</label>
+            <input
+              id="category"
+              required
+              placeholder="Mfano: ICT / Technology, Driver, House Girl..."
+            >
           </div>
 
           <div>
@@ -492,16 +493,18 @@
 
       const title = document.getElementById("title").value.trim();
       const companyName = document.getElementById("company").value.trim();
+      const employerEmail = document.getElementById("employerEmail").value.trim();
+      const employerWhatsapp = document.getElementById("employerWhatsapp").value.trim();
       const location = document.getElementById("location").value.trim();
       const jobType = document.getElementById("type").value;
-      const categoryName = document.getElementById("category").value;
+      const categoryName = document.getElementById("category").value.trim();
       const deadline = document.getElementById("deadline").value || null;
       const description = document.getElementById("description").value.trim();
       const requirements = document.getElementById("requirements").value.trim();
       const applyLink = document.getElementById("applyLink").value.trim();
 
-      if(!title || !companyName || !location){
-        throw new Error("Jaza Job Title, Company Name na Location.");
+      if(!title || !companyName || !location || !categoryName){
+        throw new Error("Jaza Job Title, Company Name, Location na Category.");
       }
 
       const logoFile = document.getElementById("companyLogo").files[0] || null;
@@ -540,6 +543,8 @@
           requirements: requirements || null,
           deadline: deadline,
           apply_link: applyLink || null,
+          employer_email: employerEmail || null,
+          employer_whatsapp: employerWhatsapp || null,
           company_logo_url: companyLogoUrl || company.logo_url || null,
           featured_image_url: featuredImageUrl || null,
           status: "published",
