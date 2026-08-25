@@ -387,62 +387,140 @@
     }
 
     async function getJob(){
-      const slug=getSlug();
+      const slug = getSlug();
 
       if(!slug){
-        return null;
+        throw new Error("Job slug missing.");
       }
 
-      const query = supabaseClient
-        .from("jobs")
-        .select(`
-          id,
-          title,
-          slug,
-          location,
-          job_type,
-          description,
-          requirements,
-          deadline,
-          apply_link,
-          employer_email,
-          employer_whatsapp,
-          company_logo_url,
-          featured_image_url,
-          status,
-          companies(name,logo_url),
-          categories(name)
-        `)
-        .eq("slug",slug)
-        .eq("status","published")
-        .maybeSingle();
+      const SUPABASE_URL = "https://jvgvmnzekjkaakgqkoct.supabase.co";
+      const SUPABASE_KEY = "sb_publishable_5h9e4kX950OSHjhKvcGTDg_X8AILbMk";
 
-      // Avoid an endless loading screen if the network/database does not respond.
-      const timeout = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error("Supabase request timed out.")), 12000)
-      );
+      // Use the REST API directly here. This avoids the public job page
+      // getting stuck if the Supabase JS client or a nested relation hangs.
+      const params = new URLSearchParams({
+        select: "*",
+        slug: `eq.${slug}`,
+        status: "eq.published",
+        limit: "1"
+      });
 
-      const {data,error}=await Promise.race([query, timeout]);
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 10000);
 
-      if(error){
-        console.error("Supabase job error:",error);
-        throw error;
+      let response;
+
+      try{
+        response = await fetch(
+          `${SUPABASE_URL}/rest/v1/jobs?${params.toString()}`,
+          {
+            method: "GET",
+            headers: {
+              "apikey": SUPABASE_KEY,
+              "Authorization": `Bearer ${SUPABASE_KEY}`,
+              "Accept": "application/json"
+            },
+            signal: controller.signal
+          }
+        );
+      }finally{
+        clearTimeout(timer);
       }
+
+      if(!response.ok){
+        const body = await response.text().catch(() => "");
+        throw new Error(`Supabase HTTP ${response.status}: ${body}`);
+      }
+
+      const rows = await response.json();
+      const data = rows?.[0];
 
       if(!data){
         return null;
       }
 
+      // Fetch company name/logo separately when the FK is available.
+      let company = "Company";
+      let companyLogo = data.company_logo_url || "";
+
+      if(data.company_id){
+        try{
+          const companyParams = new URLSearchParams({
+            select: "name,logo_url",
+            id: `eq.${data.company_id}`,
+            limit: "1"
+          });
+
+          const companyResponse = await fetch(
+            `${SUPABASE_URL}/rest/v1/companies?${companyParams.toString()}`,
+            {
+              headers: {
+                "apikey": SUPABASE_KEY,
+                "Authorization": `Bearer ${SUPABASE_KEY}`,
+                "Accept": "application/json"
+              }
+            }
+          );
+
+          if(companyResponse.ok){
+            const companyRows = await companyResponse.json();
+            const companyData = companyRows?.[0];
+
+            if(companyData){
+              company = companyData.name || company;
+              if(!companyLogo){
+                companyLogo = companyData.logo_url || "";
+              }
+            }
+          }
+        }catch(error){
+          console.warn("Company lookup failed:", error);
+        }
+      }
+
+      // Fetch category name separately. Manual categories are supported too.
+      let category = data.category || data.category_name || "Jobs";
+
+      if(data.category_id){
+        try{
+          const categoryParams = new URLSearchParams({
+            select: "name",
+            id: `eq.${data.category_id}`,
+            limit: "1"
+          });
+
+          const categoryResponse = await fetch(
+            `${SUPABASE_URL}/rest/v1/categories?${categoryParams.toString()}`,
+            {
+              headers: {
+                "apikey": SUPABASE_KEY,
+                "Authorization": `Bearer ${SUPABASE_KEY}`,
+                "Accept": "application/json"
+              }
+            }
+          );
+
+          if(categoryResponse.ok){
+            const categoryRows = await categoryResponse.json();
+            if(categoryRows?.[0]?.name){
+              category = categoryRows[0].name;
+            }
+          }
+        }catch(error){
+          console.warn("Category lookup failed:", error);
+        }
+      }
+
       return {
         ...data,
-        company:data.companies?.name || "Company",
-        category:data.categories?.name || "Jobs",
-        type:data.job_type || "Full Time",
-        companyLogo:data.company_logo_url || data.companies?.logo_url || "",
-        featuredImage:data.featured_image_url || "",
-        applyLink:data.apply_link || "",
-        employerEmail:data.employer_email || "",
-        employerWhatsapp:data.employer_whatsapp || ""
+        company,
+        category,
+        type: data.job_type || "Full Time",
+        companyLogo,
+        featuredImage: data.featured_image_url || "",
+        applyLink: data.apply_link || "",
+        employerEmail: data.employer_email || "",
+        employerWhatsapp: data.employer_whatsapp || ""
       };
     }
 
@@ -497,8 +575,21 @@
     async function render(){
       const box=document.getElementById("jobContent");
 
+      const loadingTimeout = setTimeout(() => {
+        if(box.querySelector(".loading")){
+          box.innerHTML = `
+            <div class="error-box">
+              <h2>⚠️ Job imechelewa kupakia</h2>
+              <p>Jaribu <strong>Refresh</strong>. Kama bado haifunguki, tatizo linaweza kuwa kwenye Supabase/RLS.</p>
+              <button class="apply" onclick="location.reload()">🔄 Refresh</button>
+            </div>
+          `;
+        }
+      }, 12000);
+
       try{
         const job=await getJob();
+        clearTimeout(loadingTimeout);
 
         if(!job){
           box.innerHTML=`
@@ -635,7 +726,8 @@
         document.getElementById("canonicalUrl").href=pageUrl;
 
       }catch(error){
-        console.error(error);
+        clearTimeout(loadingTimeout);
+        console.error("Job page error:", error);
 
         box.innerHTML=`
           <div class="error-box">
