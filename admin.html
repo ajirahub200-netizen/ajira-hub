@@ -84,14 +84,14 @@
   </style>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="supabase-config.js"></script>
+  <script src="/supabase-config.js"></script>
 </head>
 
 <body>
 
 <div id="loginOverlay" class="login-overlay">
   <form class="login-card" id="loginForm">
-    <img src="../logo.png" alt="Ajira & Connection Hub TZ">
+    <img src="/logo.png" alt="Ajira & Connection Hub TZ">
     <h2>Admin Login</h2>
     <p>Ingia kusimamia Ajira & Connection Hub TZ</p>
 
@@ -110,7 +110,7 @@
 <div class="layout">
   <aside>
     <div class="brand">
-      <img src="../logo.png" alt="Logo">
+      <img src="/logo.png" alt="Logo">
       <strong>AJIRA HUB<br>ADMIN</strong>
     </div>
 
@@ -132,7 +132,7 @@
         </div>
 
         <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <a class="view-site" href="index.html">🌐 View Website</a>
+          <a class="view-site" href="/">🌐 View Website</a>
           <button class="view-site" type="button" onclick="adminLogout()" style="cursor:pointer">🚪 Logout</button>
         </div>
       </div>
@@ -744,28 +744,45 @@
     location.reload();
   }
 
+  // Security behaviour:
+  // A saved Supabase session must NOT automatically open the admin dashboard.
+  // The administrator must explicitly log in when opening this admin URL.
+  let loginApproved = false;
+
+  function showLoginScreen(){
+    const overlay = document.getElementById("loginOverlay");
+    if(overlay) overlay.style.display = "flex";
+    document.body.style.overflow = "hidden";
+  }
+
+  async function openAdminAfterLogin(){
+    const overlay = document.getElementById("loginOverlay");
+
+    if(overlay) overlay.style.display = "none";
+    document.body.style.overflow = "";
+    clearSystemError();
+
+    await loadJobs();
+    await loadStatistics();
+  }
+
   async function checkSession(){
     try{
-      const { data, error } = await supabaseClient.auth.getSession();
+      // We intentionally do not use an existing saved session to bypass login.
+      // The page always starts with the login screen.
+      const { error } = await supabaseClient.auth.getSession();
 
       if(error) throw error;
 
-      if(data.session){
-        document.getElementById("loginOverlay").style.display = "none";
-        document.body.style.overflow = "";
-        clearSystemError();
+      loginApproved = false;
+      showLoginScreen();
 
-        await loadJobs();
-        await loadStatistics();
-      }else{
-        document.getElementById("loginOverlay").style.display = "flex";
-        document.body.style.overflow = "hidden";
-      }
     }catch(error){
       console.error(error);
       showSystemError(
-        "Supabase haija-connect vizuri. Hakikisha supabase-config.js ipo pamoja na admin.html."
+        "Supabase haija-connect vizuri. Hakikisha /supabase-config.js ipo na inafanya kazi."
       );
+      showLoginScreen();
     }
   }
 
@@ -778,33 +795,50 @@
     const email = document.getElementById("adminEmail").value.trim();
     const password = document.getElementById("adminPassword").value;
 
+    if(!email || !password){
+      errorBox.textContent = "Weka email na password.";
+      return;
+    }
+
     try{
-      const { error } = await supabaseClient.auth.signInWithPassword({
+      const { data, error } = await supabaseClient.auth.signInWithPassword({
         email,
         password
       });
 
       if(error) throw error;
 
-      await checkSession();
+      if(!data?.session){
+        throw new Error("Login imefanikiwa lakini session haijapatikana. Jaribu tena.");
+      }
+
+      loginApproved = true;
+      await openAdminAfterLogin();
 
     }catch(error){
       console.error("Login error:",error);
+      loginApproved = false;
       errorBox.textContent = error.message || "Login imeshindikana.";
+      showLoginScreen();
     }
   });
 
   supabaseClient.auth.onAuthStateChange((event, session) => {
     const overlay = document.getElementById("loginOverlay");
 
-    if(session){
-      overlay.style.display = "none";
+    // Only hide the login overlay after an explicit successful login
+    // during this page load. A pre-existing session cannot bypass it.
+    if(session && loginApproved){
+      if(overlay) overlay.style.display = "none";
       document.body.style.overflow = "";
-      loadJobs();
-      loadStatistics();
+    }else if(!session){
+      loginApproved = false;
+      showLoginScreen();
     }
   });
 
+  // Always start on the login screen, even if Supabase has a saved session.
+  showLoginScreen();
   checkSession();
 </script>
 
