@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard | Ajira & Connection Hub TZ</title>
+
+  <style>
+    :root{
+      --blue:#073b82;--blue2:#0b65c2;--green:#19b51d;
+      --dark:#172033;--muted:#667085;--light:#f4f7fb;
+      --border:#e2e8f0;--danger:#d92d20;--white:#fff;
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:Arial,Helvetica,sans-serif;background:var(--light);color:var(--dark)}
+    button,input,select,textarea{font:inherit}
+    .layout{display:grid;grid-template-columns:250px 1fr;min-height:100vh}
+    aside{background:#0e1b2b;color:#fff;padding:22px 16px;position:sticky;top:0;height:100vh}
+    .brand{display:flex;align-items:center;gap:10px;margin-bottom:28px}
+    .brand img{width:62px;height:62px;object-fit:contain;background:#fff;border-radius:10px}
+    .brand strong{font-size:16px}
+    .nav button{
+      width:100%;border:0;background:transparent;color:#d7e0ea;
+      padding:13px 12px;text-align:left;border-radius:9px;margin:3px 0;cursor:pointer
+    }
+    .nav button:hover,.nav button.active{background:#173252;color:#fff}
+    main{padding:28px}
+    .top{display:flex;justify-content:space-between;align-items:center;gap:15px;margin-bottom:25px}
+    .top h1{font-size:28px}
+    .view-site{background:#fff;border:1px solid var(--border);padding:10px 14px;border-radius:8px;text-decoration:none;color:var(--blue2);font-weight:700}
+    .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:25px}
+    .stat{background:#fff;border:1px solid var(--border);border-radius:13px;padding:19px}
+    .stat small{color:var(--muted)} .stat strong{display:block;font-size:28px;margin-top:4px}
+    .panel{background:#fff;border:1px solid var(--border);border-radius:15px;padding:22px;margin-bottom:22px}
+    .panel-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:18px}
+    .panel h2{font-size:21px}
+    .btn{border:0;border-radius:8px;padding:11px 15px;font-weight:700;cursor:pointer}
+    .primary{background:var(--blue2);color:#fff}.green{background:var(--green);color:#fff}
+    .secondary{background:#eef4ff;color:var(--blue2)}.danger{background:#fff0ef;color:var(--danger)}
+    .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:15px}
+    label{display:block;font-size:14px;font-weight:700;margin-bottom:6px}
+    input,select,textarea{width:100%;border:1px solid var(--border);border-radius:8px;padding:11px;outline:none;background:#fff}
+    textarea{min-height:120px;resize:vertical}.full{grid-column:1/-1}
+    .form-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+    .job-row{border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:12px}
+    .job-row-top{display:flex;justify-content:space-between;gap:15px}
+    .job-row h3{font-size:18px;margin-bottom:4px}.job-row p{color:var(--muted);font-size:14px}
+    .status{display:inline-block;margin-top:8px;padding:5px 9px;border-radius:20px;background:#ecfaed;color:#159419;font-size:12px;font-weight:700}
+    .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:13px}
+    .actions button,.actions a{border:0;padding:8px 11px;border-radius:7px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none}
+    .toast{position:fixed;right:20px;bottom:20px;background:#122033;color:#fff;padding:13px 17px;border-radius:9px;display:none;z-index:9999}
+    .note{background:#eaf4ff;border:1px solid #b9d6ff;padding:12px;border-radius:9px;color:#174b82;margin-bottom:18px;font-size:14px}
+    .error-note{background:#fff0ef;border:1px solid #f5b7b1;padding:12px;border-radius:9px;color:#9b1c1c;margin-bottom:18px;font-size:14px;display:none}
+    .image-preview{margin-top:10px;display:none}
+    .image-preview img{width:80px;height:80px;object-fit:contain;border:1px solid var(--border);border-radius:10px;padding:5px;background:#fff}
+    .featured-preview img{width:100%;max-width:420px;height:180px;object-fit:cover;border:1px solid var(--border);border-radius:10px;padding:4px;background:#fff}
+    .loading{text-align:center;color:var(--muted);padding:25px}
+    @media(max-width:900px){
+      .layout{grid-template-columns:1fr}aside{position:static;height:auto}
+      .nav{display:flex;overflow:auto;gap:5px}.nav button{white-space:nowrap;width:auto}
+      .stats{grid-template-columns:repeat(2,1fr)}main{padding:18px}
+    }
+    @media(max-width:600px){
+      .stats,.form-grid{grid-template-columns:1fr}.full{grid-column:auto}
+      .top{align-items:flex-start;flex-direction:column}.job-row-top{flex-direction:column}
+    }
+
+    .login-overlay{
+      position:fixed;inset:0;background:linear-gradient(135deg,#073b82,#0b65c2);
+      z-index:5000;display:flex;align-items:center;justify-content:center;padding:20px;
+    }
+    .login-card{
+      width:min(420px,100%);background:#fff;border-radius:18px;padding:30px;
+      box-shadow:0 25px 70px rgba(0,0,0,.25);
+    }
+    .login-card img{display:block;width:90px;height:75px;object-fit:contain;margin:0 auto 12px}
+    .login-card h2{text-align:center;color:#073b82;margin-bottom:6px}
+    .login-card p{text-align:center;color:#667085;margin-bottom:22px}
+    .login-card label{display:block;font-weight:700;margin:12px 0 6px}
+    .login-card input{width:100%;padding:13px;border:1px solid #e2e8f0;border-radius:8px}
+    .login-btn{width:100%;margin-top:18px;padding:13px;border:0;border-radius:8px;background:#0b65c2;color:#fff;font-weight:700;cursor:pointer}
+    .login-error{color:#d92d20;text-align:center;font-size:14px;margin-top:12px;min-height:20px}
+    .login-note{font-size:12px!important;color:#98a2b3!important;margin:15px 0 0!important}
+  </style>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+</head>
+
+<body>
+
+<div id="loginOverlay" class="login-overlay">
+  <form class="login-card" id="loginForm">
+    <img src="logo.png" alt="Ajira & Connection Hub TZ">
+    <h2>Admin Login</h2>
+    <p>Ingia kusimamia Ajira & Connection Hub TZ</p>
+
+    <label for="adminEmail">Email</label>
+    <input id="adminEmail" type="email" required placeholder="admin@example.com">
+
+    <label for="adminPassword">Password</label>
+    <input id="adminPassword" type="password" required placeholder="Password">
+
+    <button class="login-btn" type="submit">🔐 Login</button>
+    <div id="loginError" class="login-error"></div>
+    <p class="login-note">Login inalindwa na Supabase Authentication.</p>
+  </form>
+</div>
+
+<div class="layout">
+  <aside>
+    <div class="brand">
+      <img src="logo.png" alt="Logo">
+      <strong>AJIRA HUB<br>ADMIN</strong>
+    </div>
+
+    <div class="nav">
+      <button class="active" onclick="scrollToSection('dashboard')">📊 Dashboard</button>
+      <button onclick="scrollToSection('addJob')">➕ Add Job</button>
+      <button onclick="scrollToSection('manageJobs')">💼 Manage Jobs</button>
+      <button onclick="scrollToSection('addJob')">🏢 Companies</button>
+      <button onclick="scrollToSection('addJob')">📂 Categories</button>
+    </div>
+  </aside>
+
+  <main>
+    <section id="dashboard">
+      <div class="top">
+        <div>
+          <h1>Admin Dashboard</h1>
+          <p style="color:#667085">Ajira & Connection Hub TZ</p>
+        </div>
+
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <a class="view-site" href="index.html">🌐 View Website</a>
+          <button class="view-site" type="button" onclick="adminLogout()" style="cursor:pointer">🚪 Logout</button>
+        </div>
+      </div>
+
+      <div class="note">
+        ✅ <strong>Supabase mode:</strong> Jobs, companies, categories na picha zinahifadhiwa online.
+        Job ikishapublish itaonekana kwenye website na inaweza kupata link ya moja kwa moja.
+      </div>
+
+      <div id="systemError" class="error-note"></div>
+
+      <section class="stats">
+        <div class="stat"><small>Total Jobs</small><strong id="totalJobs">0</strong></div>
+        <div class="stat"><small>Published</small><strong id="publishedJobs">0</strong></div>
+        <div class="stat"><small>Drafts</small><strong id="draftJobs">0</strong></div>
+        <div class="stat"><small>Categories</small><strong id="categoryCount">0</strong></div>
+      </section>
+    </section>
+
+    <section class="panel" id="addJob">
+      <div class="panel-head">
+        <h2>➕ Add New Job</h2>
+      </div>
+
+      <form id="jobForm">
+        <div class="form-grid">
+
+          <div>
+            <label>Job Title *</label>
+            <input id="title" required placeholder="Mfano: Accountant">
+          </div>
+
+          <div>
+            <label>Company Name *</label>
+            <input id="company" required placeholder="Mfano: NMB Bank Plc">
+          </div>
+
+          <div>
+            <label>Company Logo</label>
+            <input id="companyLogo" type="file" accept="image/png,image/jpeg,image/webp">
+            <div id="logoPreview" class="image-preview">
+              <img id="previewImage" alt="Logo preview">
+              <button type="button" class="btn danger" style="margin-left:8px" onclick="clearLogo()">Remove</button>
+            </div>
+          </div>
+
+          <div>
+            <label>Location *</label>
+            <input id="location" required placeholder="Dar es Salaam">
+          </div>
+
+          <div>
+            <label>Job Type</label>
+            <select id="type">
+              <option>Full Time</option>
+              <option>Part Time</option>
+              <option>Contract</option>
+              <option>Internship</option>
+              <option>Fixed-term contract</option>
+            </select>
+          </div>
+
+          <div>
+            <label>Category</label>
+            <select id="category">
+              <option>Accounting / Finance</option>
+              <option>ICT / Technology</option>
+              <option>Education</option>
+              <option>Health & Medical</option>
+              <option>Banking</option>
+              <option>Human Resources</option>
+              <option>Marketing & Sales</option>
+              <option>Engineering</option>
+              <option>NGO / Development</option>
+              <option>Government</option>
+              <option>Internship</option>
+              <option>Graduate Jobs</option>
+            </select>
+          </div>
+
+          <div>
+            <label>Application Deadline</label>
+            <input id="deadline" type="date">
+          </div>
+
+          <div class="full">
+            <label>Featured Image / Job Banner (optional)</label>
+            <input id="featuredImage" type="file" accept="image/png,image/jpeg,image/webp">
+            <div id="featuredPreview" class="image-preview featured-preview">
+              <img id="featuredPreviewImage" alt="Featured image preview">
+              <button type="button" class="btn danger" style="margin-top:8px" onclick="clearFeatured()">Remove</button>
+            </div>
+          </div>
+
+          <div class="full">
+            <label>Short Description</label>
+            <textarea id="description" placeholder="Maelezo mafupi ya kazi..."></textarea>
+          </div>
+
+          <div class="full">
+            <label>Requirements</label>
+            <textarea id="requirements" placeholder="Andika requirements..."></textarea>
+          </div>
+
+          <div class="full">
+            <label>Official Application Link</label>
+            <input id="applyLink" type="url" placeholder="https://...">
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button class="btn primary" id="publishBtn" type="submit">🚀 Publish Job</button>
+          <button class="btn secondary" type="reset" onclick="resetPreviews()">Clear Form</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="panel" id="manageJobs">
+      <div class="panel-head">
+        <h2>💼 Manage Jobs</h2>
+        <button class="btn secondary" onclick="loadJobs()">🔄 Refresh</button>
+      </div>
+      <div id="jobsContainer">
+        <div class="loading">⏳ Inapakia jobs...</div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const STORAGE_BUCKET = "job-images";
+
+  function showSystemError(message){
+    const box = document.getElementById("systemError");
+    if(!box) return;
+    box.textContent = "❌ " + message;
+    box.style.display = "block";
+  }
+
+  function clearSystemError(){
+    const box = document.getElementById("systemError");
+    if(!box) return;
+    box.textContent = "";
+    box.style.display = "none";
+  }
+
+  function scrollToSection(id){
+    document.getElementById(id)?.scrollIntoView({behavior:"smooth"});
+  }
+
+  function slugify(text){
+    return String(text || "")
+      .toLowerCase()
+      .trim()
+      .replace(/&/g,"and")
+      .replace(/[^a-z0-9]+/g,"-")
+      .replace(/^-+|-+$/g,"");
+  }
+
+  function escapeHtml(s){
+    return String(s || "").replace(/[&<>"']/g, m => ({
+      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+    }[m]));
+  }
+
+  function toast(msg){
+    const t = document.getElementById("toast");
+    t.textContent = msg;
+    t.style.display = "block";
+    setTimeout(() => t.style.display = "none", 3200);
+  }
+
+  function resetPreviews(){
+    clearLogo();
+    clearFeatured();
+  }
+
+  function previewFile(input, previewBoxId, imageId){
+    const file = input.files && input.files[0];
+    if(!file) return;
+
+    if(!file.type.startsWith("image/")){
+      alert("Tafadhali chagua picha.");
+      input.value = "";
+      return;
+    }
+
+    if(file.size > 5 * 1024 * 1024){
+      alert("Picha iwe chini ya 5MB.");
+      input.value = "";
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = e => {
+      document.getElementById(imageId).src = e.target.result;
+      document.getElementById(previewBoxId).style.display = "block";
+    };
+    reader.readAsDataURL(file);
+  }
+
+  document.getElementById("companyLogo").addEventListener("change", function(){
+    previewFile(this,"logoPreview","previewImage");
+  });
+
+  document.getElementById("featuredImage").addEventListener("change", function(){
+    previewFile(this,"featuredPreview","featuredPreviewImage");
+  });
+
+  function clearLogo(){
+    document.getElementById("companyLogo").value = "";
+    document.getElementById("previewImage").src = "";
+    document.getElementById("logoPreview").style.display = "none";
+  }
+
+  function clearFeatured(){
+    document.getElementById("featuredImage").value = "";
+    document.getElementById("featuredPreviewImage").src = "";
+    document.getElementById("featuredPreview").style.display = "none";
+  }
+
+  async function uploadImage(file, folder){
+    if(!file) return "";
+
+    const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
+    const safeExt = ext.replace(/[^a-z0-9]/g,"") || "jpg";
+    const fileName = `${folder}/${crypto.randomUUID()}.${safeExt}`;
+
+    const { error: uploadError } = await supabaseClient
+      .storage
+      .from(STORAGE_BUCKET)
+      .upload(fileName, file, {
+        cacheControl: "3600",
+        upsert: false,
+        contentType: file.type || "image/jpeg"
+      });
+
+    if(uploadError) throw uploadError;
+
+    const { data } = supabaseClient
+      .storage
+      .from(STORAGE_BUCKET)
+      .getPublicUrl(fileName);
+
+    return data.publicUrl;
+  }
+
+  async function getOrCreateCategory(categoryName){
+    const slug = slugify(categoryName);
+
+    let { data, error } = await supabaseClient
+      .from("categories")
+      .select("id,name,slug")
+      .eq("slug", slug)
+      .maybeSingle();
+
+    if(error) throw error;
+    if(data) return data;
+
+    const result = await supabaseClient
+      .from("categories")
+      .insert({
+        name: categoryName,
+        slug: slug
+      })
+      .select("id,name,slug")
+      .single();
+
+    if(result.error) throw result.error;
+    return result.data;
+  }
+
+  async function getOrCreateCompany(companyName, logoUrl, location){
+    const slug = slugify(companyName);
+
+    let { data, error } = await supabaseClient
+      .from("companies")
+      .select("id,name,slug,logo_url,location")
+      .eq("slug", slug)
+      .maybeSingle();
+
+    if(error) throw error;
+
+    if(data){
+      const updates = {};
+      if(logoUrl) updates.logo_url = logoUrl;
+      if(location && !data.location) updates.location = location;
+
+      if(Object.keys(updates).length){
+        const updated = await supabaseClient
+          .from("companies")
+          .update(updates)
+          .eq("id", data.id)
+          .select("id,name,slug,logo_url,location")
+          .single();
+
+        if(updated.error) throw updated.error;
+        data = updated.data;
+      }
+
+      return data;
+    }
+
+    const result = await supabaseClient
+      .from("companies")
+      .insert({
+        name: companyName,
+        slug: slug,
+        logo_url: logoUrl || null,
+        location: location || null
+      })
+      .select("id,name,slug,logo_url,location")
+      .single();
+
+    if(result.error) throw result.error;
+    return result.data;
+  }
+
+  async function makeUniqueSlug(baseSlug){
+    let slug = baseSlug || "job";
+    let counter = 1;
+
+    while(true){
+      const { data, error } = await supabaseClient
+        .from("jobs")
+        .select("id")
+        .eq("slug", slug)
+        .maybeSingle();
+
+      if(error) throw error;
+      if(!data) return slug;
+
+      counter++;
+      slug = `${baseSlug}-${counter}`;
+    }
+  }
+
+  async function publishJob(e){
+    e.preventDefault();
+    clearSystemError();
+
+    const btn = document.getElementById("publishBtn");
+    btn.disabled = true;
+    btn.textContent = "⏳ Inahifadhi...";
+
+    try{
+      const {
+        data: { user },
+        error: userError
+      } = await supabaseClient.auth.getUser();
+
+      if(userError || !user){
+        throw new Error("Session ya admin haipo. Tafadhali login tena.");
+      }
+
+      const title = document.getElementById("title").value.trim();
+      const companyName = document.getElementById("company").value.trim();
+      const location = document.getElementById("location").value.trim();
+      const jobType = document.getElementById("type").value;
+      const categoryName = document.getElementById("category").value;
+      const deadline = document.getElementById("deadline").value || null;
+      const description = document.getElementById("description").value.trim();
+      const requirements = document.getElementById("requirements").value.trim();
+      const applyLink = document.getElementById("applyLink").value.trim();
+
+      if(!title || !companyName || !location){
+        throw new Error("Jaza Job Title, Company Name na Location.");
+      }
+
+      const logoFile = document.getElementById("companyLogo").files[0] || null;
+      const featuredFile = document.getElementById("featuredImage").files[0] || null;
+
+      btn.textContent = "⏳ Uploading picha...";
+
+      const companyLogoUrl = await uploadImage(logoFile, "logos");
+      const featuredImageUrl = await uploadImage(featuredFile, "featured");
+
+      btn.textContent = "⏳ Inaandaa company/category...";
+
+      const company = await getOrCreateCompany(
+        companyName,
+        companyLogoUrl,
+        location
+      );
+
+      const category = await getOrCreateCategory(categoryName);
+
+      btn.textContent = "⏳ Inapublish job...";
+
+      const baseSlug = slugify(`${title} ${companyName}`);
+      const slug = await makeUniqueSlug(baseSlug);
+
+      const { data, error } = await supabaseClient
+        .from("jobs")
+        .insert({
+          title: title,
+          slug: slug,
+          company_id: company.id,
+          location: location,
+          job_type: jobType,
+          category_id: category.id,
+          description: description || null,
+          requirements: requirements || null,
+          deadline: deadline,
+          apply_link: applyLink || null,
+          company_logo_url: companyLogoUrl || company.logo_url || null,
+          featured_image_url: featuredImageUrl || null,
+          status: "published",
+          created_by: user.id
+        })
+        .select("*")
+        .single();
+
+      if(error) throw error;
+
+      document.getElementById("jobForm").reset();
+      clearLogo();
+      clearFeatured();
+
+      toast("✅ Job imehifadhiwa Supabase na imepublish!");
+
+      await loadJobs();
+      await loadStatistics();
+
+      const url = `${window.location.origin}/job/${encodeURIComponent(data.slug)}`;
+
+      setTimeout(() => {
+        const copy = confirm(
+          "Job imepublish vizuri!\n\nLink yake ni:\n" + url +
+          "\n\nBonyeza OK ku-copy link."
+        );
+
+        if(copy){
+          navigator.clipboard?.writeText(url)
+            .then(() => toast("📋 Job link ime-copywa!"))
+            .catch(() => prompt("Copy link hii:", url));
+        }
+      }, 200);
+
+    }catch(error){
+      console.error("Publish job error:", error);
+      showSystemError(error.message || "Imeshindikana kuhifadhi job.");
+      toast("❌ Job haijahifadhiwa.");
+    }finally{
+      btn.disabled = false;
+      btn.textContent = "🚀 Publish Job";
+    }
+  }
+
+  document.getElementById("jobForm").addEventListener("submit", publishJob);
+
+  function jobUrl(job){
+    // Clean public URL used for WhatsApp previews
+    return `${window.location.origin}/job/${encodeURIComponent(job.slug)}`;
+  }
+
+  async function copyLink(jobId){
+    const { data: job, error } = await supabaseClient
+      .from("jobs")
+      .select("id,title,slug")
+      .eq("id", jobId)
+      .single();
+
+    if(error){
+      alert(error.message);
+      return;
+    }
+
+    const url = jobUrl(job);
+
+    try{
+      await navigator.clipboard.writeText(url);
+      toast("📋 Job link ime-copywa.");
+    }catch{
+      prompt("Copy link hii:", url);
+    }
+  }
+
+  async function shareJob(jobId){
+    const { data: job, error } = await supabaseClient
+      .from("jobs")
+      .select("id,title,slug,location,company_id,companies(name)")
+      .eq("id", jobId)
+      .single();
+
+    if(error){
+      alert(error.message);
+      return;
+    }
+
+    const company = job.companies?.name || "";
+    const url = jobUrl(job);
+
+    const text =
+      `🔥 ${job.title}\n` +
+      `🏢 ${company}\n` +
+      `📍 ${job.location}\n\n` +
+      `👉 Soma details / Apply:\n${url}`;
+
+    window.open(
+      "https://wa.me/?text=" + encodeURIComponent(text),
+      "_blank"
+    );
+  }
+
+  async function deleteJob(jobId){
+    const confirmed = confirm("Una uhakika unataka kufuta job hii?");
+    if(!confirmed) return;
+
+    try{
+      const { error } = await supabaseClient
+        .from("jobs")
+        .delete()
+        .eq("id", jobId);
+
+      if(error) throw error;
+
+      toast("🗑️ Job imefutwa.");
+      await loadJobs();
+      await loadStatistics();
+    }catch(error){
+      alert("❌ Imeshindikana kufuta job:\n\n" + error.message);
+    }
+  }
+
+  async function loadJobs(){
+    const box = document.getElementById("jobsContainer");
+    box.innerHTML = '<div class="loading">⏳ Inapakia jobs...</div>';
+
+    try{
+      const { data, error } = await supabaseClient
+        .from("jobs")
+        .select(`
+          id,title,slug,location,job_type,status,deadline,created_at,
+          companies(name)
+        `)
+        .order("created_at",{ascending:false});
+
+      if(error) throw error;
+
+      if(!data || !data.length){
+        box.innerHTML =
+          '<p style="color:#667085">📭 Bado hakuna job kwenye Supabase.</p>';
+        return;
+      }
+
+      box.innerHTML = data.map(job => `
+        <div class="job-row">
+          <div class="job-row-top">
+            <div>
+              <h3>${escapeHtml(job.title)}</h3>
+              <p>
+                ${escapeHtml(job.companies?.name || "Company")} •
+                📍 ${escapeHtml(job.location)} •
+                ${escapeHtml(job.job_type)}
+              </p>
+              <span class="status">
+                ● ${escapeHtml(job.status)}
+              </span>
+            </div>
+          </div>
+
+          <div class="actions">
+            <a class="secondary" href="${jobUrl(job)}" target="_blank">👁 View</a>
+            <button class="secondary" onclick="copyLink('${job.id}')">📋 Copy Link</button>
+            <button class="green" onclick="shareJob('${job.id}')">📲 WhatsApp</button>
+            <button class="danger" onclick="deleteJob('${job.id}')">🗑 Delete</button>
+          </div>
+        </div>
+      `).join("");
+
+    }catch(error){
+      console.error("Load jobs error:",error);
+      box.innerHTML =
+        `<p style="color:#d92d20">❌ ${escapeHtml(error.message)}</p>`;
+    }
+  }
+
+  async function loadStatistics(){
+    try{
+      const { data: jobs, error: jobsError } = await supabaseClient
+        .from("jobs")
+        .select("id,status");
+
+      if(jobsError) throw jobsError;
+
+      document.getElementById("totalJobs").textContent = jobs?.length || 0;
+      document.getElementById("publishedJobs").textContent =
+        jobs?.filter(j => j.status === "published").length || 0;
+      document.getElementById("draftJobs").textContent =
+        jobs?.filter(j => j.status === "draft").length || 0;
+
+      const { count, error: categoryError } = await supabaseClient
+        .from("categories")
+        .select("id",{count:"exact",head:true});
+
+      if(categoryError) throw categoryError;
+      document.getElementById("categoryCount").textContent = count || 0;
+
+    }catch(error){
+      console.error("Statistics error:",error);
+    }
+  }
+
+  async function adminLogout(){
+    await supabaseClient.auth.signOut();
+    location.reload();
+  }
+
+  async function checkSession(){
+    try{
+      const { data, error } = await supabaseClient.auth.getSession();
+
+      if(error) throw error;
+
+      if(data.session){
+        document.getElementById("loginOverlay").style.display = "none";
+        document.body.style.overflow = "";
+        clearSystemError();
+
+        await loadJobs();
+        await loadStatistics();
+      }else{
+        document.getElementById("loginOverlay").style.display = "flex";
+        document.body.style.overflow = "hidden";
+      }
+    }catch(error){
+      console.error(error);
+      showSystemError(
+        "Supabase haija-connect vizuri. Hakikisha supabase-config.js ipo pamoja na admin.html."
+      );
+    }
+  }
+
+  document.getElementById("loginForm").addEventListener("submit", async function(e){
+    e.preventDefault();
+
+    const errorBox = document.getElementById("loginError");
+    errorBox.textContent = "";
+
+    const email = document.getElementById("adminEmail").value.trim();
+    const password = document.getElementById("adminPassword").value;
+
+    try{
+      const { error } = await supabaseClient.auth.signInWithPassword({
+        email,
+        password
+      });
+
+      if(error) throw error;
+
+      await checkSession();
+
+    }catch(error){
+      console.error("Login error:",error);
+      errorBox.textContent = error.message || "Login imeshindikana.";
+    }
+  });
+
+  supabaseClient.auth.onAuthStateChange((event, session) => {
+    const overlay = document.getElementById("loginOverlay");
+
+    if(session){
+      overlay.style.display = "none";
+      document.body.style.overflow = "";
+      loadJobs();
+      loadStatistics();
+    }
+  });
+
+  checkSession();
+</script>
+
+</body>
+</html>
