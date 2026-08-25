@@ -27,14 +27,7 @@
   <link rel="canonical" id="canonicalUrl" href="">
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script>
-    // Public read-only Supabase connection for the job page.
-    // Keeping this here makes the public page independent of a relative config path.
-    window.supabaseClient = window.supabase.createClient(
-      "https://jvgvmnzekjkaakgqkoct.supabase.co",
-      "sb_publishable_5h9e4kX950OSHjhKvcGTDg_X8AILbMk"
-    );
-  </script>
+  <script src="/supabase-config.js"></script>
 
   <style>
     :root{
@@ -373,31 +366,43 @@
     }
 
     function getSlug(){
-      const querySlug = new URLSearchParams(window.location.search).get("slug");
-      if(querySlug) return querySlug;
+      const params = new URLSearchParams(window.location.search);
+      const querySlug = params.get("slug");
 
-      // Also support clean links such as /job/ict-officer-vodacom-tanzania-plc
-      const parts = window.location.pathname.split("/").filter(Boolean);
+      if(querySlug){
+        return querySlug;
+      }
+
+      // Supports clean public URLs:
+      // /job/ict-officer-vodacom-tanzania-plc
+      const parts = window.location.pathname
+        .split("/")
+        .filter(Boolean);
+
       const jobIndex = parts.indexOf("job");
-      if(jobIndex >= 0 && parts[jobIndex + 1]){
+
+      if(jobIndex !== -1 && parts[jobIndex + 1]){
         return decodeURIComponent(parts[jobIndex + 1]);
       }
 
-      return null;
+      return "";
     }
 
     async function getJob(){
       const slug = getSlug();
 
       if(!slug){
-        throw new Error("Job slug missing.");
+        throw new Error(
+          "Job slug haijapatikana. URL inatakiwa iwe /job/<slug>."
+        );
       }
 
-      const SUPABASE_URL = "https://jvgvmnzekjkaakgqkoct.supabase.co";
-      const SUPABASE_KEY = "sb_publishable_5h9e4kX950OSHjhKvcGTDg_X8AILbMk";
+      const SUPABASE_URL =
+        "https://jvgvmnzekjkaakgqkoct.supabase.co";
 
-      // Use the REST API directly here. This avoids the public job page
-      // getting stuck if the Supabase JS client or a nested relation hangs.
+      const SUPABASE_KEY =
+        "sb_publishable_5h9e4kX950OSHjhKvcGTDg_X8AILbMk";
+
       const params = new URLSearchParams({
         select: "*",
         slug: `eq.${slug}`,
@@ -406,7 +411,7 @@
       });
 
       const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(), 10000);
+      const timeout = setTimeout(() => controller.abort(), 10000);
 
       let response;
 
@@ -424,12 +429,14 @@
           }
         );
       }finally{
-        clearTimeout(timer);
+        clearTimeout(timeout);
       }
 
       if(!response.ok){
-        const body = await response.text().catch(() => "");
-        throw new Error(`Supabase HTTP ${response.status}: ${body}`);
+        const errorText = await response.text().catch(() => "");
+        throw new Error(
+          `Supabase HTTP ${response.status}: ${errorText}`
+        );
       }
 
       const rows = await response.json();
@@ -439,9 +446,11 @@
         return null;
       }
 
-      // Fetch company name/logo separately when the FK is available.
+      // Company lookup is optional. The job itself still loads if this fails.
       let company = "Company";
-      let companyLogo = data.company_logo_url || "";
+      let companyLogo =
+        data.company_logo_url ||
+        "";
 
       if(data.company_id){
         try{
@@ -463,23 +472,26 @@
           );
 
           if(companyResponse.ok){
-            const companyRows = await companyResponse.json();
-            const companyData = companyRows?.[0];
+            const companies = await companyResponse.json();
+            const companyData = companies?.[0];
 
             if(companyData){
               company = companyData.name || company;
+
               if(!companyLogo){
                 companyLogo = companyData.logo_url || "";
               }
             }
           }
         }catch(error){
-          console.warn("Company lookup failed:", error);
+          console.warn("Company lookup skipped:", error);
         }
       }
 
-      // Fetch category name separately. Manual categories are supported too.
-      let category = data.category || data.category_name || "Jobs";
+      let category =
+        data.category ||
+        data.category_name ||
+        "Jobs";
 
       if(data.category_id){
         try{
@@ -501,13 +513,14 @@
           );
 
           if(categoryResponse.ok){
-            const categoryRows = await categoryResponse.json();
-            if(categoryRows?.[0]?.name){
-              category = categoryRows[0].name;
+            const categories = await categoryResponse.json();
+
+            if(categories?.[0]?.name){
+              category = categories[0].name;
             }
           }
         }catch(error){
-          console.warn("Category lookup failed:", error);
+          console.warn("Category lookup skipped:", error);
         }
       }
 
@@ -575,21 +588,8 @@
     async function render(){
       const box=document.getElementById("jobContent");
 
-      const loadingTimeout = setTimeout(() => {
-        if(box.querySelector(".loading")){
-          box.innerHTML = `
-            <div class="error-box">
-              <h2>⚠️ Job imechelewa kupakia</h2>
-              <p>Jaribu <strong>Refresh</strong>. Kama bado haifunguki, tatizo linaweza kuwa kwenye Supabase/RLS.</p>
-              <button class="apply" onclick="location.reload()">🔄 Refresh</button>
-            </div>
-          `;
-        }
-      }, 12000);
-
       try{
         const job=await getJob();
-        clearTimeout(loadingTimeout);
 
         if(!job){
           box.innerHTML=`
@@ -659,8 +659,9 @@
             <h2>How to Apply</h2>
 
             <p>
-              Soma taarifa za nafasi hii vizuri kisha tumia njia ya maombi
-              iliyowekwa na mwajiri: <strong>Apply Now</strong>, WhatsApp au Email.
+              Soma taarifa za nafasi hii vizuri kisha bonyeza
+              <strong>Apply Now</strong> kwenda kwenye ukurasa rasmi
+              wa maombi.
             </p>
 
             <div class="buttons" id="applyButtons">
@@ -726,18 +727,14 @@
         document.getElementById("canonicalUrl").href=pageUrl;
 
       }catch(error){
-        clearTimeout(loadingTimeout);
         console.error("Job page error:", error);
 
         box.innerHTML=`
           <div class="error-box">
             <h2>⚠️ Imeshindikana kupakia Job</h2>
             <p>${escapeHtml(error?.message || "Unknown error")}</p>
-            <p style="font-size:13px;color:#667085;">Slug: ${escapeHtml(getSlug() || "(hakuna slug)")}</p>
-            <p>
-              Imeshindikana kuwasiliana na database ya Ajira Hub.
-              Jaribu refresh. Kama tatizo linaendelea, angalia Supabase/RLS
-              ya table <strong>jobs</strong>.
+            <p style="font-size:13px;color:#667085;">
+              Slug: ${escapeHtml(getSlug() || "(hakuna slug)")}
             </p>
             <a href="/index.html">← Rudi kwenye Home</a>
           </div>
@@ -776,45 +773,48 @@
 
     async function applyNow(){
       try{
-        const job=await getJob();
+        const job = await getJob();
 
-        if(job && job.applyLink){
-          let url = job.applyLink.trim();
-
-          // Make sure normal web links open safely even if admin pasted
-          // a URL without the protocol.
-          if(!/^https?:\\/\\//i.test(url)){
-            url = "https://" + url;
-          }
-
-          window.open(
-            url,
-            "_blank",
-            "noopener,noreferrer"
-          );
-        }else{
+        if(!job || !job.applyLink){
           showMessage(
-            "Application link haijawekwa. Tumia WhatsApp au Email kama zipo."
+            "Official application link haijawekwa na Admin."
           );
+          return;
         }
+
+        let url = job.applyLink.trim();
+
+        if(!/^https?:\/\//i.test(url)){
+          url = "https://" + url;
+        }
+
+        window.open(
+          url,
+          "_blank",
+          "noopener,noreferrer"
+        );
       }catch(error){
-        console.error(error);
-        showMessage("Imeshindikana kufungua application link.");
+        console.error("Apply link error:", error);
+        showMessage(
+          "Imeshindikana kufungua application link."
+        );
       }
     }
 
     async function applyWhatsApp(){
       try{
-        const job=await getJob();
+        const job = await getJob();
 
         if(!job || !job.employerWhatsapp){
-          showMessage("WhatsApp ya mwajiri haijawekwa na Admin.");
+          showMessage(
+            "WhatsApp ya mwajiri haijawekwa na Admin."
+          );
           return;
         }
 
-        let number = String(job.employerWhatsapp).replace(/[^0-9+]/g,"");
+        let number = String(job.employerWhatsapp)
+          .replace(/[^0-9+]/g,"");
 
-        // Tanzania convenience: 07XXXXXXXX / 06XXXXXXXX -> 2557XXXXXXXX / 2556XXXXXXXX
         if(/^0[67][0-9]{8}$/.test(number)){
           number = "255" + number.substring(1);
         }
@@ -824,43 +824,60 @@
         const message =
           "Habari, nimeona tangazo la kazi ya " +
           job.title +
-          " kupitia Ajira & Connection Hub TZ. Ningependa kuomba nafasi hii.";
+          " kupitia Ajira & Connection Hub TZ. " +
+          "Ningependa kuomba nafasi hii.";
 
         window.open(
-          "https://wa.me/" + number + "?text=" + encodeURIComponent(message),
+          "https://wa.me/" +
+          number +
+          "?text=" +
+          encodeURIComponent(message),
           "_blank",
           "noopener,noreferrer"
         );
       }catch(error){
-        console.error(error);
-        showMessage("Imeshindikana kufungua WhatsApp ya mwajiri.");
+        console.error("WhatsApp apply error:", error);
+        showMessage(
+          "Imeshindikana kufungua WhatsApp ya mwajiri."
+        );
       }
     }
 
     async function applyEmail(){
       try{
-        const job=await getJob();
+        const job = await getJob();
 
         if(!job || !job.employerEmail){
-          showMessage("Email ya mwajiri haijawekwa na Admin.");
+          showMessage(
+            "Email ya mwajiri haijawekwa na Admin."
+          );
           return;
         }
 
-        const subject = "Application - " + job.title;
+        const subject =
+          "Application - " + job.title;
+
         const body =
-          "Habari,\\n\\n" +
-          "Nimeona tangazo la " + job.title +
-          " kupitia Ajira & Connection Hub TZ. Ningependa kuomba nafasi hii.\\n\\n" +
+          "Habari,\n\n" +
+          "Nimeona tangazo la " +
+          job.title +
+          " kupitia Ajira & Connection Hub TZ. " +
+          "Ningependa kuomba nafasi hii.\n\n" +
           "Asante.";
 
         window.location.href =
-          "mailto:" + encodeURIComponent(job.employerEmail) +
-          "?subject=" + encodeURIComponent(subject) +
-          "&body=" + encodeURIComponent(body);
+          "mailto:" +
+          encodeURIComponent(job.employerEmail) +
+          "?subject=" +
+          encodeURIComponent(subject) +
+          "&body=" +
+          encodeURIComponent(body);
 
       }catch(error){
-        console.error(error);
-        showMessage("Imeshindikana kufungua email ya mwajiri.");
+        console.error("Email apply error:", error);
+        showMessage(
+          "Imeshindikana kufungua email ya mwajiri."
+        );
       }
     }
 
