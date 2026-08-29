@@ -28,7 +28,7 @@
     .top{display:flex;justify-content:space-between;align-items:center;gap:15px;margin-bottom:25px}
     .top h1{font-size:28px}
     .view-site{background:#fff;border:1px solid var(--border);padding:10px 14px;border-radius:8px;text-decoration:none;color:var(--blue2);font-weight:700}
-    .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:25px}
+    .stats{display:grid;grid-template-columns:repeat(6,1fr);gap:14px;margin-bottom:25px}
     .stat{background:#fff;border:1px solid var(--border);border-radius:13px;padding:19px}
     .stat small{color:var(--muted)} .stat strong{display:block;font-size:28px;margin-top:4px}
     .panel{background:#fff;border:1px solid var(--border);border-radius:15px;padding:22px;margin-bottom:22px}
@@ -84,14 +84,14 @@
   </style>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="/supabase-config.js"></script>
+  <script src="supabase-config.js"></script>
 </head>
 
 <body>
 
 <div id="loginOverlay" class="login-overlay">
   <form class="login-card" id="loginForm">
-    <img src="/logo.png" alt="Ajira & Connection Hub TZ">
+    <img src="logo.png" alt="Ajira & Connection Hub TZ">
     <h2>Admin Login</h2>
     <p>Ingia kusimamia Ajira & Connection Hub TZ</p>
 
@@ -110,7 +110,7 @@
 <div class="layout">
   <aside>
     <div class="brand">
-      <img src="/logo.png" alt="Logo">
+      <img src="logo.png" alt="Logo">
       <strong>AJIRA HUB<br>ADMIN</strong>
     </div>
 
@@ -148,6 +148,8 @@
         <div class="stat"><small>Total Jobs</small><strong id="totalJobs">0</strong></div>
         <div class="stat"><small>Published</small><strong id="publishedJobs">0</strong></div>
         <div class="stat"><small>Drafts</small><strong id="draftJobs">0</strong></div>
+        <div class="stat"><small>Expired</small><strong id="expiredJobs">0</strong></div>
+        <div class="stat"><small>Total Views</small><strong id="totalViews">0</strong></div>
         <div class="stat"><small>Categories</small><strong id="categoryCount">0</strong></div>
       </section>
     </section>
@@ -197,20 +199,17 @@
 
           <div>
             <label>Category</label>
-            <select id="category">
-              <option>Accounting / Finance</option>
-              <option>ICT / Technology</option>
-              <option>Education</option>
-              <option>Health & Medical</option>
-              <option>Banking</option>
-              <option>Human Resources</option>
-              <option>Marketing & Sales</option>
-              <option>Engineering</option>
-              <option>NGO / Development</option>
-              <option>Government</option>
-              <option>Internship</option>
-              <option>Graduate Jobs</option>
-            </select>
+            <input id="category" type="text" required placeholder="Mfano: ICT / Technology">
+          </div>
+
+          <div>
+            <label>Employer Email</label>
+            <input id="employerEmail" type="email" placeholder="hr@company.com">
+          </div>
+
+          <div>
+            <label>Employer WhatsApp</label>
+            <input id="employerWhatsapp" type="tel" placeholder="0712345678 au +255712345678">
           </div>
 
           <div>
@@ -494,14 +493,20 @@
       const companyName = document.getElementById("company").value.trim();
       const location = document.getElementById("location").value.trim();
       const jobType = document.getElementById("type").value;
-      const categoryName = document.getElementById("category").value;
+      const categoryName = document.getElementById("category").value.trim();
+      const employerEmail = document.getElementById("employerEmail").value.trim();
+      const employerWhatsapp = document.getElementById("employerWhatsapp").value.trim();
       const deadline = document.getElementById("deadline").value || null;
       const description = document.getElementById("description").value.trim();
       const requirements = document.getElementById("requirements").value.trim();
       const applyLink = document.getElementById("applyLink").value.trim();
 
-      if(!title || !companyName || !location){
-        throw new Error("Jaza Job Title, Company Name na Location.");
+      if(!title || !companyName || !location || !categoryName){
+        throw new Error("Jaza Job Title, Company Name, Location na Category.");
+      }
+
+      if(employerEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(employerEmail)){
+        throw new Error("Weka Employer Email sahihi.");
       }
 
       const logoFile = document.getElementById("companyLogo").files[0] || null;
@@ -540,6 +545,8 @@
           requirements: requirements || null,
           deadline: deadline,
           apply_link: applyLink || null,
+          employer_email: employerEmail || null,
+          employer_whatsapp: employerWhatsapp || null,
           company_logo_url: companyLogoUrl || company.logo_url || null,
           featured_image_url: featuredImageUrl || null,
           status: "published",
@@ -715,24 +722,61 @@
 
   async function loadStatistics(){
     try{
+
+      // ==========================================
+      // JOB STATISTICS
+      // ==========================================
+
       const { data: jobs, error: jobsError } = await supabaseClient
         .from("jobs")
-        .select("id,status");
+        .select("id,status,views");
 
       if(jobsError) throw jobsError;
 
-      document.getElementById("totalJobs").textContent = jobs?.length || 0;
+      const jobList = jobs || [];
+
+      // Total Jobs
+      document.getElementById("totalJobs").textContent =
+        jobList.length;
+
+      // Published
       document.getElementById("publishedJobs").textContent =
-        jobs?.filter(j => j.status === "published").length || 0;
+        jobList.filter(j => j.status === "published").length;
+
+      // Drafts
       document.getElementById("draftJobs").textContent =
-        jobs?.filter(j => j.status === "draft").length || 0;
+        jobList.filter(j => j.status === "draft").length;
+
+      // Expired
+      document.getElementById("expiredJobs").textContent =
+        jobList.filter(j => j.status === "expired").length;
+
+      // Total Views
+      // Views are stored in the job_views table.
+      const { data: viewRows, error: viewsError } = await supabaseClient
+        .from("job_views")
+        .select("id");
+
+      if (viewsError) {
+        console.error("Views error:", viewsError);
+        document.getElementById("totalViews").textContent = "0";
+      } else {
+        document.getElementById("totalViews").textContent =
+          viewRows?.length || 0;
+      }
+
+      // ==========================================
+      // CATEGORY STATISTICS
+      // ==========================================
 
       const { count, error: categoryError } = await supabaseClient
         .from("categories")
         .select("id",{count:"exact",head:true});
 
       if(categoryError) throw categoryError;
-      document.getElementById("categoryCount").textContent = count || 0;
+
+      document.getElementById("categoryCount").textContent =
+        count || 0;
 
     }catch(error){
       console.error("Statistics error:",error);
@@ -740,7 +784,18 @@
   }
 
   async function adminLogout(){
-    await supabaseClient.auth.signOut();
+    loginApproved = false;
+
+    try{
+      await supabaseClient.auth.signOut({scope:"local"});
+    }catch(error){
+      console.warn("Local logout warning:", error);
+    }
+
+    showLoginScreen();
+    document.getElementById("adminPassword").value = "";
+    document.getElementById("loginError").textContent = "";
+
     location.reload();
   }
 
@@ -826,18 +881,19 @@
   supabaseClient.auth.onAuthStateChange((event, session) => {
     const overlay = document.getElementById("loginOverlay");
 
-    // Only hide the login overlay after an explicit successful login
-    // during this page load. A pre-existing session cannot bypass it.
+    // Never allow a pre-existing Supabase session to bypass the login form.
     if(session && loginApproved){
       if(overlay) overlay.style.display = "none";
       document.body.style.overflow = "";
-    }else if(!session){
-      loginApproved = false;
-      showLoginScreen();
+      return;
     }
+
+    loginApproved = false;
+    showLoginScreen();
   });
 
-  // Always start on the login screen, even if Supabase has a saved session.
+  // Always start locked. No saved session may open the dashboard automatically.
+  loginApproved = false;
   showLoginScreen();
   checkSession();
 </script>

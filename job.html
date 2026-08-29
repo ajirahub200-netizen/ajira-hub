@@ -184,6 +184,12 @@
       font-size:14px;
     }
 
+    .meta .views{
+      color:#7c3aed;
+      font-weight:700;
+      background:#f5f3ff;
+    }
+
     .meta .full{
       color:var(--green);
       font-weight:700;
@@ -537,6 +543,83 @@
       };
     }
 
+    async function recordJobView(jobId){
+      if(!jobId){
+        return 0;
+      }
+
+      const SUPABASE_URL =
+        "https://jvgvmnzekjkaakgqkoct.supabase.co";
+
+      const SUPABASE_KEY =
+        "sb_publishable_5h9e4kX950OSHjhKvcGTDg_X8AILbMk";
+
+      try{
+        // Record one view.
+        const insertResponse = await fetch(
+          `${SUPABASE_URL}/rest/v1/job_views`,
+          {
+            method: "POST",
+            headers: {
+              "apikey": SUPABASE_KEY,
+              "Authorization": `Bearer ${SUPABASE_KEY}`,
+              "Content-Type": "application/json",
+              "Prefer": "return=minimal"
+            },
+            body: JSON.stringify({
+              job_id: jobId
+            })
+          }
+        );
+
+        if(!insertResponse.ok){
+          console.warn(
+            "Job view insert failed:",
+            await insertResponse.text().catch(() => "")
+          );
+          return 0;
+        }
+
+        // Get the current total without loading all rows.
+        const countUrl =
+          `${SUPABASE_URL}/rest/v1/job_views` +
+          `?select=id` +
+          `&job_id=eq.${encodeURIComponent(jobId)}` +
+          `&limit=0`;
+
+        const countResponse = await fetch(
+          countUrl,
+          {
+            method: "GET",
+            headers: {
+              "apikey": SUPABASE_KEY,
+              "Authorization": `Bearer ${SUPABASE_KEY}`,
+              "Accept": "application/json",
+              "Prefer": "count=exact"
+            }
+          }
+        );
+
+        if(!countResponse.ok){
+          return 0;
+        }
+
+        const contentRange =
+          countResponse.headers.get("content-range") || "";
+
+        const match =
+          contentRange.match(/\/(\d+)$/);
+
+        return match ? Number(match[1]) : 0;
+
+      }catch(error){
+        // View tracking must never break the job page.
+        console.warn("Job view tracking skipped:", error);
+        return 0;
+      }
+    }
+
+
     function requirementsHtml(requirements){
       if(!requirements){
         return "<p>Hakuna requirements zilizowekwa.</p>";
@@ -602,6 +685,9 @@
           return;
         }
 
+        // Record this page visit and get the current total.
+        const viewCount = await recordJobView(job.id);
+
         const deadline=job.deadline || "Haijawekwa";
 
         box.innerHTML=`
@@ -630,6 +716,7 @@
             <span>📍 ${escapeHtml(job.location)}</span>
             <span>💼 ${escapeHtml(job.category)}</span>
             <span>📅 Deadline: ${escapeHtml(deadline)}</span>
+            <span class="views">👁️ ${escapeHtml(viewCount || 0)} Views</span>
           </div>
 
           <div class="share-strip">
@@ -821,17 +908,8 @@
 
         number = number.replace(/\+/g,"");
 
-        const message =
-          "Habari, nimeona tangazo la kazi ya " +
-          job.title +
-          " kupitia Ajira & Connection Hub TZ. " +
-          "Ningependa kuomba nafasi hii.";
-
         window.open(
-          "https://wa.me/" +
-          number +
-          "?text=" +
-          encodeURIComponent(message),
+          "https://wa.me/" + number,
           "_blank",
           "noopener,noreferrer"
         );

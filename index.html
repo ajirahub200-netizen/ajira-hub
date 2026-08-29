@@ -239,6 +239,102 @@
     .cta h2{font-size:30px;margin-bottom:8px}
     .cta p{opacity:.9}
     .cta .btn{background:var(--green)}
+
+    .employer-whatsapp{
+      position:relative;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:9px;
+      min-height:56px;
+      padding:0 25px;
+      border-radius:12px;
+      background:#19b51d;
+      color:#fff;
+      font-weight:800;
+      box-shadow:0 10px 25px rgba(25,181,29,.28);
+      overflow:hidden;
+      animation:whatsappPulse 2s infinite;
+      transition:transform .2s ease,box-shadow .2s ease;
+    }
+
+    .employer-whatsapp::after{
+      content:"";
+      position:absolute;
+      top:0;
+      left:-90%;
+      width:55%;
+      height:100%;
+      background:linear-gradient(90deg,transparent,rgba(255,255,255,.45),transparent);
+      transform:skewX(-20deg);
+      animation:whatsappShine 2.8s infinite;
+    }
+
+    .employer-whatsapp:hover{
+      transform:translateY(-3px) scale(1.02);
+      box-shadow:0 14px 32px rgba(25,181,29,.38);
+    }
+
+    @keyframes whatsappPulse{
+      0%,100%{box-shadow:0 10px 25px rgba(25,181,29,.28)}
+      50%{box-shadow:0 10px 32px rgba(25,181,29,.50)}
+    }
+
+    @keyframes whatsappShine{
+      0%{left:-90%}
+      45%,100%{left:130%}
+    }
+
+    .whatsapp-cta{
+      position:relative;
+      overflow:hidden;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      min-width:210px;
+      box-shadow:0 8px 22px rgba(25,181,29,.28);
+      animation:whatsappPulse 2s ease-in-out infinite;
+      transition:transform .2s ease, box-shadow .2s ease;
+    }
+
+    .whatsapp-cta::after{
+      content:"";
+      position:absolute;
+      top:0;
+      left:-80%;
+      width:55%;
+      height:100%;
+      background:linear-gradient(
+        100deg,
+        transparent,
+        rgba(255,255,255,.35),
+        transparent
+      );
+      transform:skewX(-20deg);
+      animation:whatsappShine 3s ease-in-out infinite;
+    }
+
+    .whatsapp-cta:hover{
+      transform:translateY(-3px) scale(1.02);
+      box-shadow:0 12px 30px rgba(25,181,29,.38);
+      background:#159419 !important;
+    }
+
+    @keyframes whatsappPulse{
+      0%,100%{box-shadow:0 8px 22px rgba(25,181,29,.25)}
+      50%{box-shadow:0 8px 30px rgba(25,181,29,.48)}
+    }
+
+    @keyframes whatsappShine{
+      0%,35%{left:-80%}
+      65%,100%{left:130%}
+    }
+
+    @media (prefers-reduced-motion: reduce){
+      .whatsapp-cta,
+      .whatsapp-cta::after{animation:none}
+    }
     footer{
       background:#111a1f;
       color:#fff;
@@ -314,7 +410,7 @@
     }
   </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="supabase-config.js"></script>
+<script src="/supabase-config.js"></script>
 </head>
 <body>
   <div class="topbar"></div>
@@ -348,7 +444,6 @@
     <a href="#about" onclick="closeMenu()">Kuhusu Sisi</a>
     <a href="#updates" onclick="closeMenu()">Ajira Updates</a>
     <a href="#contact" onclick="closeMenu()">Wasiliana Nasi</a>
-    <a href="admin.html">Admin Login</a>
   </div>
 
   <main>
@@ -416,10 +511,18 @@
     <section class="section" id="about">
       <div class="cta">
         <div>
-          <h2>Unaajiri? Tunakusaidia kupata talent.</h2>
-          <p>Waajiri wataweza kuwasilisha nafasi zao kupitia mfumo wetu.</p>
+          <h2>💼 Una nafasi ya kazi?</h2>
+          <p>Wasiliana nasi ili tuweze kukusaidia kutangaza nafasi yako.</p>
         </div>
-        <a class="btn" href="#">Post a Job</a>
+        <a
+          class="employer-whatsapp"
+          href="https://wa.me/255763593066?text=Habari%2C%20nina%20nafasi%20ya%20kazi%20ambayo%20ningependa%20kuitangaza%20kupitia%20Ajira%20%26%20Connection%20Hub%20TZ.%20Naomba%20maelekezo%20zaidi%20kuhusu%20jinsi%20ya%20kuwasilisha%20nafasi%20hiyo.%20Asante."
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Tuma nafasi ya kazi kupitia WhatsApp"
+        >
+          📱 TUMA NAFASI YA KAZI
+        </a>
       </div>
     </section>
   </main>
@@ -439,9 +542,13 @@
         <p><a href="#about">About Us</a></p>
       </div>
       <div>
-        <h3>Contact</h3>
-        <p>📱 WhatsApp Channel</p>
-        <p>📧 info@ajirahub.tz</p>
+        <h3>Wasiliana Nasi</h3>
+        <p>
+          📱 <a href="https://wa.me/255763593066" target="_blank" rel="noopener noreferrer">0763593066</a>
+        </p>
+        <p>
+          📧 <a href="mailto:ajirahub200@gmail.com">ajirahub200@gmail.com</a>
+        </p>
         <p>🇹🇿 Tanzania</p>
       </div>
     </div>
@@ -452,25 +559,38 @@
   <script>
     async function getPublishedJobs(){
       try{
-        const {data,error}=await supabaseClient
-          .from("jobs")
-          .select(`
-            id,title,slug,location,job_type,
-            description,requirements,deadline,
-            company_logo_url,created_at,
-            companies(name,logo_url),
-            categories(name)
-          `)
-          .eq("status","published")
-          .order("created_at",{ascending:false});
+        const SUPABASE_URL =
+          "https://jvgvmnzekjkaakgqkoct.supabase.co";
 
-        if(error){
-          console.error("Supabase jobs error:",error);
-          showJobsError(error.message);
-          return [];
+        const SUPABASE_KEY =
+          "sb_publishable_5h9e4kX950OSHjhKvcGTDg_X8AILbMk";
+
+        const params = new URLSearchParams({
+          select: "id,title,slug,location,job_type,description,requirements,deadline,company_logo_url,created_at,status,companies(name,logo_url),categories(name)",
+          status: "eq.published",
+          order: "created_at.desc"
+        });
+
+        const response = await fetch(
+          `${SUPABASE_URL}/rest/v1/jobs?${params.toString()}`,
+          {
+            method: "GET",
+            headers: {
+              "apikey": SUPABASE_KEY,
+              "Authorization": `Bearer ${SUPABASE_KEY}`,
+              "Accept": "application/json"
+            }
+          }
+        );
+
+        if(!response.ok){
+          const errorText = await response.text().catch(() => "");
+          throw new Error(
+            `Supabase HTTP ${response.status}: ${errorText}`
+          );
         }
 
-        return data || [];
+        return await response.json();
       }catch(error){
         console.error("Home Supabase error:",error);
         showJobsError(error.message || "Imeshindikana ku-load jobs.");
