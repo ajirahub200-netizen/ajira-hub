@@ -226,19 +226,111 @@
     }
     .cat span{display:block;color:var(--muted);font-size:13px;font-weight:400;margin-top:4px}
     .cat:hover{border-color:var(--blue2);transform:translateY(-2px)}
-    .cta{
-      background:linear-gradient(135deg,var(--blue),var(--blue2));
-      color:#fff;
-      border-radius:20px;
-      padding:40px;
+    .action-section{
+      padding-top:35px;
+      padding-bottom:45px;
+    }
+    .action-grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:18px;
+    }
+    .action-card{
+      min-height:285px;
+      border-radius:18px;
+      padding:30px;
       display:flex;
       align-items:center;
-      justify-content:space-between;
-      gap:25px;
+      gap:22px;
+      border:1px solid rgba(255,255,255,.7);
+      box-shadow:0 8px 28px rgba(20,50,90,.07);
+      overflow:hidden;
     }
-    .cta h2{font-size:30px;margin-bottom:8px}
-    .cta p{opacity:.9}
-    .cta .btn{background:var(--green)}
+    .cv-card{
+      background:linear-gradient(135deg,#effcf2,#e5f8ea);
+    }
+    .employer-card{
+      background:linear-gradient(135deg,#edf6ff,#e1efff);
+    }
+    .action-icon{
+      flex:0 0 105px;
+      width:105px;
+      height:125px;
+      border-radius:18px;
+      display:grid;
+      place-items:center;
+      font-size:58px;
+      background:rgba(255,255,255,.62);
+      box-shadow:0 8px 22px rgba(20,50,90,.08);
+    }
+    .cv-icon{
+      background:rgba(255,255,255,.65);
+    }
+    .employer-icon{
+      width:120px;
+      height:120px;
+      font-size:54px;
+    }
+    .action-content{
+      min-width:0;
+      flex:1;
+    }
+    .action-content h2{
+      font-size:26px;
+      line-height:1.2;
+      margin:7px 0 9px;
+      color:#073b82;
+    }
+    .action-content p{
+      color:#5d7190;
+      font-size:15px;
+      line-height:1.55;
+      margin-bottom:18px;
+    }
+    .action-badge{
+      display:inline-flex;
+      align-items:center;
+      padding:5px 12px;
+      border-radius:30px;
+      color:#fff;
+      font-size:12px;
+      font-weight:800;
+      letter-spacing:.3px;
+    }
+    .cv-badge{
+      background:#22c55e;
+    }
+    .employer-badge{
+      background:#3b9df5;
+    }
+    .action-btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+      min-height:50px;
+      padding:0 20px;
+      border-radius:10px;
+      color:#fff;
+      font-weight:800;
+      transition:.2s ease;
+      white-space:nowrap;
+    }
+    .action-btn span{
+      font-size:22px;
+      line-height:1;
+    }
+    .cv-btn{
+      background:#16b43a;
+      box-shadow:0 8px 20px rgba(22,180,58,.22);
+    }
+    .employer-btn{
+      background:#0b65c2;
+      box-shadow:0 8px 20px rgba(11,101,194,.20);
+    }
+    .action-btn:hover{
+      transform:translateY(-2px);
+    }
 
     .employer-whatsapp{
       position:relative;
@@ -393,6 +485,9 @@
       .search-box{grid-template-columns:1fr}
       .jobs{grid-template-columns:1fr}
       .cat-grid{grid-template-columns:repeat(2,1fr)}
+      .action-grid{grid-template-columns:1fr}
+      .action-card{padding:26px}
+      .cv-builder-card{flex-direction:column;align-items:flex-start;padding:30px}
       .cta{flex-direction:column;align-items:flex-start;padding:30px}
       .footer-inner{grid-template-columns:1fr}
     }
@@ -404,6 +499,11 @@
       .section{padding:40px 14px}
       .section-title h2{font-size:25px}
       .cat-grid{grid-template-columns:1fr}
+      .action-card{flex-direction:column;align-items:flex-start}
+      .action-icon{width:82px;height:96px;flex-basis:96px;font-size:44px}
+      .employer-icon{width:96px;height:96px}
+      .action-content h2{font-size:23px}
+      .action-btn{width:100%}
       .job-card{padding:18px}
       .job-card h3{font-size:20px}
       .cta h2{font-size:25px}
@@ -508,21 +608,45 @@
       </div>
     </section>
 
-    <section class="section" id="about">
-      <div class="cta">
-        <div>
-          <h2>💼 Una nafasi ya kazi?</h2>
-          <p>Wasiliana nasi ili tuweze kukusaidia kutangaza nafasi yako.</p>
+    <section class="section action-section" id="about">
+      <div class="action-grid">
+
+        <div class="action-card cv-card">
+          <div class="action-icon cv-icon">📄</div>
+          <div class="action-content">
+            <span class="action-badge cv-badge">BURE</span>
+            <h2>Tengeneza CV ya Kitaalamu</h2>
+            <p>
+              Tengeneza CV yako ya kisasa, i-preview moja kwa moja,
+              kisha Download PDF au Share moja kwa moja.
+            </p>
+            <a class="action-btn cv-btn" href="cv-builder.html">
+              ✨ Tengeneza CV Sasa <span>→</span>
+            </a>
+          </div>
         </div>
-        <a
-          class="employer-whatsapp"
-          href="https://wa.me/255763593066?text=Habari%2C%20nina%20nafasi%20ya%20kazi%20ambayo%20ningependa%20kuitangaza%20kupitia%20Ajira%20%26%20Connection%20Hub%20TZ.%20Naomba%20maelekezo%20zaidi%20kuhusu%20jinsi%20ya%20kuwasilisha%20nafasi%20hiyo.%20Asante."
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label="Tuma nafasi ya kazi kupitia WhatsApp"
-        >
-          📱 TUMA NAFASI YA KAZI
-        </a>
+
+        <div class="action-card employer-card">
+          <div class="action-icon employer-icon">🏢</div>
+          <div class="action-content">
+            <span class="action-badge employer-badge">KWA WAJIRI</span>
+            <h2>Una nafasi ya kazi?</h2>
+            <p>
+              Wasiliana nasi ili tuweze kukusaidia kutangaza nafasi yako
+              kwa maelfu ya watafutaji wa kazi.
+            </p>
+            <a
+              class="action-btn employer-btn"
+              href="https://wa.me/255798256189?text=Habari%2C%20nina%20nafasi%20ya%20kazi%20ambayo%20ningependa%20kuitangaza%20kupitia%20Ajira%20%26%20Connection%20Hub%20TZ.%20Naomba%20maelekezo%20zaidi%20kuhusu%20jinsi%20ya%20kuwasilisha%20nafasi%20hiyo.%20Asante."
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Tuma nafasi ya kazi kupitia WhatsApp"
+            >
+              📱 TUMA NAFASI YA KAZI <span>→</span>
+            </a>
+          </div>
+        </div>
+
       </div>
     </section>
   </main>
@@ -544,7 +668,7 @@
       <div>
         <h3>Wasiliana Nasi</h3>
         <p>
-          📱 <a href="https://wa.me/255763593066" target="_blank" rel="noopener noreferrer">0763593066</a>
+          📱 <a href="https://wa.me/255798256189" target="_blank" rel="noopener noreferrer">0798256189</a>
         </p>
         <p>
           📧 <a href="mailto:ajirahub200@gmail.com">ajirahub200@gmail.com</a>

@@ -264,6 +264,63 @@
       font-weight:700;
     }
 
+    .cv-mini-card{
+      margin-top:18px;
+      padding:18px;
+      border:1px solid #dce9f8;
+      border-radius:14px;
+      background:linear-gradient(135deg,#effcf2,#edf6ff);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:18px;
+    }
+    .cv-mini-info{
+      display:flex;
+      align-items:center;
+      gap:13px;
+      min-width:0;
+    }
+    .cv-mini-icon{
+      width:52px;
+      height:52px;
+      flex:0 0 52px;
+      display:grid;
+      place-items:center;
+      border-radius:12px;
+      background:#fff;
+      box-shadow:0 5px 16px rgba(20,50,90,.08);
+      font-size:27px;
+    }
+    .cv-mini-info h3{
+      color:var(--blue);
+      font-size:17px;
+      margin-bottom:2px;
+    }
+    .cv-mini-info p{
+      color:#667085;
+      font-size:13px;
+      line-height:1.45;
+    }
+    .cv-mini-btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:7px;
+      min-height:44px;
+      padding:0 16px;
+      border-radius:9px;
+      background:#16a34a;
+      color:#fff;
+      font-weight:800;
+      white-space:nowrap;
+      transition:.2s ease;
+    }
+    .cv-mini-btn:hover{
+      background:#12843c;
+      transform:translateY(-2px);
+    }
+
     .side-note{
       margin-top:22px;
       padding:17px;
@@ -329,6 +386,15 @@
       .company h2{font-size:19px}
       .buttons button,
       .share-strip button{width:100%}
+
+      .cv-mini-card{
+        align-items:flex-start;
+        flex-direction:column;
+      }
+
+      .cv-mini-btn{
+        width:100%;
+      }
     }
   </style>
 </head>
@@ -339,7 +405,7 @@
   <header>
     <div class="nav">
       <a href="/index.html">
-        <img src="/logo.png" class="logo" alt="Ajira & Connection Hub TZ">
+        <img src="logo.png" class="logo" alt="Ajira & Connection Hub TZ">
       </a>
 
       <a href="/index.html" class="back">← Back to Jobs</a>
@@ -780,6 +846,19 @@
             </div>
 
             <div id="message" class="message"></div>
+
+            <div class="cv-mini-card">
+              <div class="cv-mini-info">
+                <div class="cv-mini-icon">📄</div>
+                <div>
+                  <h3>Huna CV bado?</h3>
+                  <p>Tengeneza CV yako ya kisasa bure kabla ya kuomba kazi.</p>
+                </div>
+              </div>
+              <a class="cv-mini-btn" href="cv-builder.html">
+                ✨ Tengeneza CV <span>→</span>
+              </a>
+            </div>
           </div>
 
           <div class="side-note">
