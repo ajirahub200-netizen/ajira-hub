@@ -232,13 +232,13 @@
     }
     .action-grid{
       display:grid;
-      grid-template-columns:1fr 1fr;
+      grid-template-columns:repeat(3,minmax(0,1fr));
       gap:18px;
     }
     .action-card{
-      min-height:285px;
+      min-height:255px;
       border-radius:18px;
-      padding:30px;
+      padding:24px;
       display:flex;
       align-items:center;
       gap:22px;
@@ -251,6 +251,19 @@
     }
     .employer-card{
       background:linear-gradient(135deg,#edf6ff,#e1efff);
+    }
+    .seeker-card{
+      background:linear-gradient(135deg,#f4f1ff,#ece8ff);
+    }
+    .seeker-icon{
+      background:rgba(255,255,255,.68);
+    }
+    .seeker-badge{
+      background:#7c3aed;
+    }
+    .seeker-btn{
+      background:#7c3aed;
+      box-shadow:0 8px 20px rgba(124,58,237,.20);
     }
     .action-icon{
       flex:0 0 105px;
@@ -478,34 +491,72 @@
     }
     .mobile-menu.open{display:block}
 
+    /* =========================
+       MOBILE / RESPONSIVE
+       ========================= */
     @media(max-width:800px){
       .desktop-links{display:none}
       .menu-btn{display:block}
-      .hero{padding:55px 15px}
-      .search-box{grid-template-columns:1fr}
-      .jobs{grid-template-columns:1fr}
-      .cat-grid{grid-template-columns:repeat(2,1fr)}
-      .action-grid{grid-template-columns:1fr}
-      .action-card{padding:26px}
-      .cv-builder-card{flex-direction:column;align-items:flex-start;padding:30px}
+      .hero{padding:48px 15px 42px}
+      .hero h1{max-width:650px;margin-left:auto;margin-right:auto}
+      .search-box{grid-template-columns:1fr;gap:9px;padding:12px;border-radius:15px}
+      .search-box input,.search-box select,.search-box .btn{min-height:54px}
+      .jobs{grid-template-columns:1fr;gap:14px}
+      .cat-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+      .action-grid{grid-template-columns:1fr;gap:12px}
+      .action-card{min-height:0;padding:18px;gap:15px;border-radius:16px}
+      .action-icon{flex:0 0 68px;width:68px;height:68px;border-radius:14px;font-size:38px}
+      .employer-icon{width:68px;height:68px;font-size:38px}
+      .action-content h2{font-size:20px;line-height:1.25;margin:6px 0 6px}
+      .action-content p{font-size:13px;line-height:1.45;margin-bottom:11px}
+      .action-badge{font-size:10px;padding:4px 9px}
+      .action-btn{min-height:44px;padding:0 14px;border-radius:9px;font-size:14px;width:auto}
+      .action-btn span{font-size:18px}
+      .cv-builder-card{flex-direction:column;align-items:flex-start;padding:25px}
       .cta{flex-direction:column;align-items:flex-start;padding:30px}
       .footer-inner{grid-template-columns:1fr}
     }
+
     @media(max-width:480px){
-      .nav{min-height:78px;padding:8px 14px}
-      .logo{width:82px;height:62px}
-      .hero h1{font-size:37px}
-      .hero p{font-size:16px}
-      .section{padding:40px 14px}
-      .section-title h2{font-size:25px}
-      .cat-grid{grid-template-columns:1fr}
-      .action-card{flex-direction:column;align-items:flex-start}
-      .action-icon{width:82px;height:96px;flex-basis:96px;font-size:44px}
-      .employer-icon{width:96px;height:96px}
-      .action-content h2{font-size:23px}
-      .action-btn{width:100%}
-      .job-card{padding:18px}
-      .job-card h3{font-size:20px}
+      .nav{min-height:72px;padding:7px 14px}
+      .logo{width:82px;height:60px}
+      .menu-btn{width:54px;height:50px}
+      .hero{padding:42px 14px 36px}
+      .hero h1{font-size:35px;line-height:1.08}
+      .hero p{font-size:15px;line-height:1.55;margin-bottom:22px}
+      .section{padding:34px 14px}
+      .section-title{margin-bottom:17px}
+      .section-title h2{font-size:25px;line-height:1.2}
+      .section-title p{font-size:14px;line-height:1.45;margin-top:4px}
+
+      /* Compact job cards */
+      .job-card{padding:16px;border-radius:14px}
+      .company{gap:11px;margin-bottom:13px}
+      .company-logo{width:52px;height:52px}
+      .company strong{font-size:16px}
+      .location{font-size:13px}
+      .job-card h3{font-size:20px;line-height:1.25;margin-bottom:8px}
+      .job-card p{font-size:14px;line-height:1.55;margin-bottom:14px}
+      .meta{gap:7px;margin-bottom:14px}
+      .tag{padding:5px 8px;font-size:12px}
+      .job-actions{gap:8px}
+      .apply{padding:9px 13px;font-size:14px}
+
+      /* Compact category cards */
+      .cat-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+      .cat{padding:15px 13px;border-radius:12px;font-size:14px;min-height:82px;display:flex;flex-direction:column;justify-content:center}
+      .cat strong{line-height:1.3}
+      .cat span{font-size:11px;margin-top:3px}
+
+      /* Compact CV / Employer cards */
+      .action-card{padding:15px;gap:12px;border-radius:15px}
+      .action-icon{flex:0 0 58px;width:58px;height:58px;border-radius:13px;font-size:32px}
+      .employer-icon{width:58px;height:58px;font-size:32px}
+      .action-content h2{font-size:18px;margin:5px 0 5px}
+      .action-content p{font-size:12.5px;margin-bottom:9px}
+      .action-badge{font-size:9px;padding:3px 8px}
+      .action-btn{min-height:42px;font-size:13px;padding:0 12px}
+      .action-btn span{font-size:16px}
       .cta h2{font-size:25px}
     }
   </style>
@@ -525,6 +576,8 @@
         <a href="#">Home</a>
         <a href="#jobs">Job Listings</a>
         <a href="#categories">Categories</a>
+        <a href="cv-builder.html">CV Builder</a>
+        <a href="job-seeker.html">Unatafuta Kazi?</a>
         <a href="#about">About</a>
         <a href="#contact">Contact</a>
       </div>
@@ -541,6 +594,8 @@
     <a href="#" onclick="closeMenu()">Home</a>
     <a href="#jobs" onclick="closeMenu()">Job Listings</a>
     <a href="#categories" onclick="closeMenu()">Job Categories</a>
+    <a href="cv-builder.html" onclick="closeMenu()">📄 CV Builder</a>
+    <a href="job-seeker.html" onclick="closeMenu()">👤 Unatafuta Kazi?</a>
     <a href="#about" onclick="closeMenu()">Kuhusu Sisi</a>
     <a href="#updates" onclick="closeMenu()">Ajira Updates</a>
     <a href="#contact" onclick="closeMenu()">Wasiliana Nasi</a>
@@ -592,19 +647,10 @@
           <p>Chagua taaluma unayotafuta</p>
         </div>
       </div>
-      <div class="cat-grid">
-        <a class="cat" href="#">Accounting / Finance <span>Open Jobs</span></a>
-        <a class="cat" href="#">ICT / Technology <span>Open Jobs</span></a>
-        <a class="cat" href="#">Education <span>Open Jobs</span></a>
-        <a class="cat" href="#">Health &amp; Medical <span>Open Jobs</span></a>
-        <a class="cat" href="#">Banking <span>Open Jobs</span></a>
-        <a class="cat" href="#">Human Resources <span>Open Jobs</span></a>
-        <a class="cat" href="#">Marketing &amp; Sales <span>Open Jobs</span></a>
-        <a class="cat" href="#">Engineering <span>Open Jobs</span></a>
-        <a class="cat" href="#">NGO / Development <span>Open Jobs</span></a>
-        <a class="cat" href="#">Government <span>Open Jobs</span></a>
-        <a class="cat" href="#">Internship <span>Open Jobs</span></a>
-        <a class="cat" href="#">Graduate Jobs <span>Open Jobs</span></a>
+      <div class="cat-grid" id="categoryList">
+        <div class="cat" style="grid-column:1/-1;text-align:center;color:#667085;">
+          ⏳ Inapakia categories...
+        </div>
       </div>
     </section>
 
@@ -622,6 +668,21 @@
             </p>
             <a class="action-btn cv-btn" href="cv-builder.html">
               ✨ Tengeneza CV Sasa <span>→</span>
+            </a>
+          </div>
+        </div>
+
+        <div class="action-card seeker-card">
+          <div class="action-icon seeker-icon">👤</div>
+          <div class="action-content">
+            <span class="action-badge seeker-badge">KWA WATAFUTA KAZI</span>
+            <h2>Unatafuta Kazi?</h2>
+            <p>
+              Tuma taarifa zako ili tukusaidie kukufikishia fursa za kazi
+              zinazokufaa.
+            </p>
+            <a class="action-btn seeker-btn" href="job-seeker.html">
+              📝 Tuma Taarifa Zako <span>→</span>
             </a>
           </div>
         </div>
@@ -800,6 +861,120 @@
       }).join("");
     }
 
+    function categoryKey(value){
+      return String(value || "")
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\\u0300-\\u036f]/g,"")
+        .replace(/&/g," and ")
+        .replace(/[^a-z0-9]+/g," ")
+        .trim();
+    }
+
+    function categoryGroupName(category){
+      const key=categoryKey(category);
+
+      if(
+        key.includes("information technology") ||
+        key === "it" ||
+        key.includes("ict") ||
+        key.includes("technology") ||
+        key.includes("tech")
+      ) return "ICT / Technology";
+
+      if(
+        key.includes("account") ||
+        key.includes("finance") ||
+        key.includes("accounting")
+      ) return "Accounting / Finance";
+
+      if(key.includes("health") || key.includes("medical")) return "Health & Medical";
+      if(key.includes("education") || key.includes("teaching")) return "Education";
+      if(key.includes("bank")) return "Banking";
+      if(key.includes("human resource") || key === "hr") return "Human Resources";
+      if(key.includes("marketing") || key.includes("sales")) return "Marketing & Sales";
+      if(key.includes("engineering")) return "Engineering";
+      if(key.includes("ngo") || key.includes("development")) return "NGO / Development";
+      if(key.includes("government") || key.includes("public service")) return "Government";
+      if(key.includes("intern")) return "Internship";
+      if(key.includes("graduate")) return "Graduate Jobs";
+
+      return String(category || "Other Jobs").trim();
+    }
+
+    function renderCategories(list){
+      const container=document.getElementById("categoryList");
+      if(!container)return;
+
+      const groups={};
+
+      (list || []).forEach(function(job){
+        const raw=job.categories?.name || "Other Jobs";
+        const display=categoryGroupName(raw);
+        const key=categoryKey(display);
+
+        if(!groups[key]){
+          groups[key]={
+            name:display,
+            count:0,
+            jobs:[]
+          };
+        }
+
+        groups[key].count++;
+        groups[key].jobs.push(job);
+      });
+
+      const categories=Object.values(groups)
+        .sort(function(a,b){ return b.count-a.count || a.name.localeCompare(b.name); });
+
+      let html=`
+        <a class="cat all-cat" href="#jobs" onclick="showAllJobs(event)">
+          <strong>🔥 Ajira Zote</strong>
+          <span>${list.length} Open Jobs</span>
+        </a>`;
+
+      if(!categories.length){
+        html+=`
+          <div class="cat" style="grid-column:1/-1;text-align:center;color:#667085;">
+            Bado hakuna category yenye job.
+          </div>`;
+      }else{
+        html+=categories.map(function(item){
+          return `
+            <a class="cat" href="#jobs"
+               data-category="${escapeHtml(item.name)}"
+               onclick="filterByCategory(event, this.dataset.category)">
+              <strong>${escapeHtml(item.name)}</strong>
+              <span>${item.count} Open Job${item.count===1 ? "" : "s"}</span>
+            </a>`;
+        }).join("");
+      }
+
+      container.innerHTML=html;
+    }
+
+    function filterByCategory(event, category){
+      if(event)event.preventDefault();
+
+      const key=categoryKey(category);
+      const allJobs=window.allPublishedJobs || [];
+
+      const filtered=allJobs.filter(function(job){
+        return categoryKey(categoryGroupName(job.categories?.name || "Other Jobs"))===key;
+      });
+
+      renderJobs(filtered);
+      document.getElementById("jobs")?.scrollIntoView({behavior:"smooth"});
+    }
+
+    function showAllJobs(event){
+      if(event)event.preventDefault();
+
+      renderJobs(window.allPublishedJobs || []);
+      document.getElementById("jobs")?.scrollIntoView({behavior:"smooth"});
+    }
+
     function searchJobs(event){
       if(event)event.preventDefault();
 
@@ -849,6 +1024,7 @@
       const jobs=await getPublishedJobs();
       window.allPublishedJobs=jobs;
       renderJobs(jobs);
+      renderCategories(jobs);
     }
 
     loadHomeJobs();
