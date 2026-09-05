@@ -66,6 +66,20 @@ async function handleJob(request, env) {
   try {
 
     // ===================================================
+    // LOAD JOB PAGE IN PARALLEL WITH SUPABASE REQUEST
+    // This reduces the wait time for clean /job/<slug> links.
+    // ===================================================
+
+    const jobPageUrl = new URL("/job.html", url.origin);
+
+    const jobPagePromise = env.ASSETS.fetch(
+      new Request(jobPageUrl, {
+        method: "GET",
+        headers: request.headers
+      })
+    );
+
+    // ===================================================
     // GET JOB FROM SUPABASE
     // ===================================================
 
@@ -154,7 +168,7 @@ async function handleJob(request, env) {
 
     // ===================================================
     // COMPANY INFORMATION
-    // ===================================================
+    // =====================================================
 
     let companyName =
       job.company_name ||
@@ -167,7 +181,7 @@ async function handleJob(request, env) {
 
     // ===================================================
     // GET COMPANY
-    // ===================================================
+    // =====================================================
 
     if (job.company_id) {
 
@@ -362,26 +376,10 @@ async function handleJob(request, env) {
 
 
     // ===================================================
-    // LOAD NORMAL JOB PAGE
+    // GET THE ALREADY-STARTED JOB PAGE REQUEST
     // ===================================================
 
-    const jobPageUrl =
-      new URL(
-        "/job.html",
-        url.origin
-      );
-
-
-    const jobPageResponse =
-      await env.ASSETS.fetch(
-        new Request(
-          jobPageUrl,
-          {
-            method: "GET",
-            headers: request.headers
-          }
-        )
-      );
+    const jobPageResponse = await jobPagePromise;
 
 
     // ===================================================
@@ -535,7 +533,7 @@ async function handleJob(request, env) {
             "text/html; charset=UTF-8",
 
           "Cache-Control":
-            "no-cache"
+            "public, max-age=60, s-maxage=60"
         }
       }
     );
